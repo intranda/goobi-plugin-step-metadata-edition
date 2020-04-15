@@ -22,12 +22,22 @@ import net.xeoh.plugins.base.annotations.PluginImplementation;
 @PluginImplementation
 public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
+    /*
+    Develop a new Goobi step plugin to allow multiple functionalities
+     * Show the images of the process within the Part GUI
+     * Allow the selection of a representative image
+     * Allow multiple properties to be entered and selected as checkboxes, drop down lists and as input text fields
+     * Allow the search of other processes inside of Goobi to find items with the same NLI identifier and which have a specific workflow progress
+     * Allow to duplicate metadata from a searched Goobi process into the current process
+     * Create and publish a documentation for this plugin
+     */
+
     @Getter
     private Step step;
     private String returnPath;
 
     @Getter
-    private String title = "intranda_step_rename-files";
+    private String title = "intranda_step_metadata-edition";
     @Getter
     private PluginType type = PluginType.Step;
 
