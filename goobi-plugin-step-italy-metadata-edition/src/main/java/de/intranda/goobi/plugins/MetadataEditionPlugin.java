@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.configuration.SubnodeConfiguration;
-import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.PluginGuiType;
@@ -22,11 +20,17 @@ import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.metadaten.Image;
-import de.sub.goobi.persistence.managers.MetadataManager;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
+import ugh.dl.DigitalDocument;
+import ugh.dl.DocStruct;
+import ugh.dl.Fileformat;
+import ugh.dl.Metadata;
+import ugh.dl.MetadataType;
+import ugh.dl.Prefs;
+import ugh.exceptions.MetadataTypeNotAllowedException;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
 import ugh.exceptions.WriteException;
@@ -60,22 +64,29 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private Process process;
     private String imageFolderName;
 
+    // metadata
+    private Prefs prefs;
+    private Fileformat fileformat;
+    private DigitalDocument digitalDocument;
+    private DocStruct logical;
+    private DocStruct anchor;
+    private DocStruct physical;
+
     @Getter
     private List<Image> allImages = new ArrayList<>();
 
-    // TODO configurable?
     @Getter
     private int thumbnailSize = 200;
 
     private boolean pagesRTL;
-    @Getter @Setter
+    @Getter
+    @Setter
     private Image image = null;
 
-    private int imageIndex;
+    private int imageIndex = 0;
 
     @Override
     public PluginReturnValue run() {
-
         return PluginReturnValue.FINISH;
     }
 
@@ -86,11 +97,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     @Override
     public boolean execute() {
-        if (run().equals(PluginReturnValue.FINISH)) {
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
 
     @Override
@@ -114,6 +121,45 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             imageFolderName = process.getImagesTifDirectory(true);
         } catch (IOException | InterruptedException | SwapException | DAOException e3) {
             log.error(e3);
+        }
+
+        prefs = process.getRegelsatz().getPreferences();
+        try {
+            fileformat = process.readMetadataFile();
+            digitalDocument = fileformat.getDigitalDocument();
+            logical = digitalDocument.getLogicalDocStruct();
+            if (logical.getType().isAnchor()) {
+                anchor = logical;
+                logical = logical.getAllChildren().get(0);
+            }
+            physical = digitalDocument.getPhysicalDocStruct();
+        } catch (ReadException | PreferencesException | WriteException | IOException | InterruptedException | SwapException | DAOException e1) {
+            log.error(e1);
+        }
+
+        List<Metadata> lstMetadata = physical.getAllMetadata();
+        for (Metadata md : lstMetadata) {
+            if (md.getType().getName().equals("_representative")) {
+                try {
+                    Integer value = new Integer(md.getValue());
+                    if (value > 0) {
+                        imageIndex = value - 1;
+                    }
+                } catch (Exception e) {
+
+                }
+            }
+        }
+
+        if (logical.getAllMetadata() != null) {
+            for (Metadata md : logical.getAllMetadata()) {
+                if (md.getType().getName().equals("_directionRTL")) {
+                    try {
+                        pagesRTL = Boolean.valueOf(md.getValue());
+                    } catch (Exception e) {
+                    }
+                }
+            }
         }
 
         //        String projectName = step.getProzess().getProjekt().getTitel();
@@ -144,60 +190,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         //        }
         //
         //        initConfig(config);
-        //check pages RTL:
-        try {
-            this.pagesRTL = readPagesRTLFromXML();
 
-        } catch (Exception e) {
-            //by default, false
-        }
         initImageList();
     }
-
-    private void initConfig(SubnodeConfiguration config) {
-
-
-    }
-
-    private boolean readPagesRTLFromXML()
-            throws ReadException, PreferencesException, WriteException, IOException, InterruptedException, SwapException, DAOException {
-
-        String readingDirection = MetadataManager.getMetadataValue(process.getId(), "_directionRTL");
-        if (StringUtils.isNotBlank(readingDirection)) {
-            return Boolean.valueOf(readingDirection);
-        }
-
-        //        Fileformat gdzfile = process.readMetadataFile();
-        //        if (gdzfile == null) {
-        //            return false;
-        //        }
-        //
-        //        DigitalDocument mydocument = gdzfile.getDigitalDocument();
-        //
-        //        DocStruct logicalTopstruct = mydocument.getLogicalDocStruct();
-        //        if (logicalTopstruct.getType().isAnchor()) {
-        //            logicalTopstruct = logicalTopstruct.getAllChildren().get(0);
-        //        }
-        //
-        //        if (logicalTopstruct.getAllMetadata() != null) {
-        //
-        //            List<Metadata> lstMetadata = logicalTopstruct.getAllMetadata();
-        //            for (Metadata md : lstMetadata) {
-        //                if (md.getType().getName().equals("_directionRTL")) {
-        //                    try {
-        //                        boolean value = Boolean.valueOf(md.getValue());
-        //                        return value;
-        //                    } catch (Exception e) {
-        //
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //default:
-        return false;
-    }
-
 
     @Override
     public HashMap<String, StepReturnValue> validate() {
@@ -208,7 +203,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     public int getInterfaceVersion() {
         return 0;
     }
-
 
     private void initImageList() {
         Path path = Paths.get(imageFolderName);
@@ -227,17 +221,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
             }
         }
-        setImageIndex(0);
-        //check pages RTL:
-        //        try {
-        //            this.pagesRTL = readPagesRTLFromXML();
-        //
-        //        } catch (Exception e) {
-        //            //by default, false
-        //        }
-
+        setImageIndex(imageIndex);
     }
-
 
     public int getSizeOfImageList() {
         return allImages.size();
@@ -247,11 +232,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         return this.pagesRTL ? "rtl" : "ltr";
     }
 
-
-
-
     public void setImageIndex(int imageIndex) {
-        System.out.println(imageIndex);
         this.imageIndex = imageIndex;
         if (this.imageIndex < 0) {
             this.imageIndex = 0;
@@ -262,6 +243,52 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         if (this.imageIndex >= 0) {
             setImage(allImages.get(this.imageIndex));
         }
+    }
 
+    public void saveMetsfile() {
+
+        // save reading direction
+        if (logical.getAllMetadata() != null) {
+            boolean match = false;
+            for (Metadata md : logical.getAllMetadata()) {
+                if (md.getType().getName().equals("_directionRTL")) {
+                    md.setValue(String.valueOf(this.pagesRTL));
+                    match = true;
+                }
+            }
+            if (!match) {
+                MetadataType mdt = prefs.getMetadataTypeByName("_directionRTL");
+                if (mdt != null) {
+                    try {
+                        Metadata md = new Metadata(mdt);
+                        md.setValue(String.valueOf(this.pagesRTL));
+                        logical.addMetadata(md);
+                    } catch (MetadataTypeNotAllowedException e) {
+
+                    }
+                }
+            }
+        }
+        // save representative image
+        boolean match = false;
+        if (physical != null && physical.getAllMetadata() != null && physical.getAllMetadata().size() > 0) {
+            for (Metadata md : physical.getAllMetadata()) {
+                if (md.getType().getName().equals("_representative")) {
+                    md.setValue(String.valueOf(imageIndex + 1));
+                    match = true;
+                }
+            }
+        }
+        if (!match) {
+            MetadataType mdt = prefs.getMetadataTypeByName("_representative");
+            try {
+                Metadata md = new Metadata(mdt);
+                Integer value = new Integer(imageIndex + 1);
+                md.setValue(String.valueOf(value));
+
+                physical.addMetadata(md);
+            } catch (MetadataTypeNotAllowedException e) {
+            }
+        }
     }
 }
