@@ -45,20 +45,16 @@
                     layout="block"
                     rendered="#{AktuelleSchritteForm.myPlugin.sizeOfImageList gt 0}">
 
-                    <div class="row">
-                        <f:subview id="first">
-                            <ui:include src="../../../ImageQAPlugin_include_thumbnavigation.xhtml" />
-                        </f:subview>
-                    </div>
+                   
 
                     <!-- Thumbnail list -->
                     <div
-                        class="flex-container margin-top-most margin-bottom-most"
+                        class="flex-container"
                         dir="#{AktuelleSchritteForm.myPlugin.flowDir}">
 
                         <ui:repeat
                             var="image"
-                            value="#{AktuelleSchritteForm.myPlugin.paginatorListForPartGUI}"
+                            value="#{AktuelleSchritteForm.myPlugin.allImages}"
                             varStatus="status">
                             <div
                                 class="goobi-thumbnail #{AktuelleSchritteForm.myPlugin.image.imageName eq image.imageName?'img-active':'font-light'}"
@@ -66,7 +62,9 @@
                                 <div class="goobi-thumbnail-image">
 
                                     <div class="thumb">
-                                        <h:commandLink title="#{image.tooltip}">
+                                        <h:commandLink title="#{image.tooltip}"
+                                         onclick="updateSelectedThumbnail(this);"
+                                        >
                                             <canvas
                                                 class="thumb-canvas"
                                                 data-image_small="#{image.thumbnailUrl}"
@@ -78,15 +76,15 @@
                                                 target="#{AktuelleSchritteForm.myPlugin.imageIndex}" />
                                             <f:ajax
                                                 execute="@form"
-                                                render="@form :qaform:bigimage"
-                                                onevent="freeJSResources" />
+                                       
+                                                />
 
                                         </h:commandLink>
                                     </div>
 
                                 </div>
                                 <div class="goobi-thumbnail-caption">
-                                    <h:outputText value="#{image.imageNameShort}"></h:outputText>
+                                    <h:outputText value="#{image.imageName}"></h:outputText>
                                 </div>
 
                             </div>
@@ -112,6 +110,17 @@
                                                                         }
                                                                     }
 
+                                                                    function updateSelectedThumbnail(element) {
+                                                                     
+                                                                        var galleryLinks = document.getElementsByClassName('goobi-thumbnail img-active');
+                                                                        console.log(galleryLinks);
+                                                                        for (var i = 0; i &lt; galleryLinks.length; i++) {
+                                                                            galleryLinks[i].className = "goobi-thumbnail font-light";            
+                                                                        }
+                                                                        element.parentElement.parentElement.parentElement.className = "goobi-thumbnail img-active";
+                                                                        return true;
+                                                                    }
+                                                                    
                                                                     $( document ).ready( function() {
                                                                         loadThumbnails();
                                                                     } );
@@ -124,6 +133,9 @@
                                                                                 break;
                                                                         }
                                                                     } );
+                                                                    
+                                                                    
+                                                                    
                                                                 </script>
 
 
