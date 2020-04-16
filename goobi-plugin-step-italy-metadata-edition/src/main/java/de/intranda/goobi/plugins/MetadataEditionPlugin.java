@@ -29,6 +29,7 @@ import de.sub.goobi.helper.enums.PropertyType;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.metadaten.Image;
+import de.sub.goobi.persistence.managers.PropertyManager;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
@@ -403,8 +404,14 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         }
     }
 
-    public void saveMetsfile() {
+    public void saveAllChanges() {
 
+        // save properties
+        for (MetadataField mf : metadataFieldList) {
+            if (mf.getProperty()!= null) {
+                PropertyManager.saveProcessProperty(mf.getProperty());
+            }
+        }
         // save reading direction
         if (logical.getAllMetadata() != null) {
             boolean match = false;
@@ -447,6 +454,14 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 physical.addMetadata(md);
             } catch (MetadataTypeNotAllowedException e) {
             }
+        }
+
+        // save mets file
+
+        try {
+            process.writeMetadataFile(fileformat);
+        } catch (WriteException | PreferencesException | IOException | InterruptedException | SwapException | DAOException e) {
+            log.error(e);
         }
     }
 

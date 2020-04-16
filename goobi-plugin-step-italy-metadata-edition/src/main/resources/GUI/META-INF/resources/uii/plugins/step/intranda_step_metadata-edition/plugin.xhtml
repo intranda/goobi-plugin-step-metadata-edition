@@ -15,151 +15,15 @@
 .goobi-thumbnail {
     float: left;
     margin: 7px;
-    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
-}
-
-px
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-;
-height
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-:
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-#{
-AktuelleSchritteForm
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-.myPlugin
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-.thumbnailSize
-+
-55
-}
-px
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;
+    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
+    height:#{AktuelleSchritteForm.myPlugin.thumbnailSize+55}px;
 }
 .goobi-thumbnail .goobi-thumbnail-image {
     float: left;
     width: 100%;
     min-height: 100px;
     overflow: hidden;
-    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
-}
-px
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;
+    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
 }
 </style>
 
@@ -318,7 +182,6 @@ px
                             itemValue="#{item}" />
                     </ui:fragment>
 
-
                     <ui:fragment rendered="#{field.type == 'checkbox'}">
                         <intranda:formInputCheckBoxAjax
                             label="#{msgs[field.label]}"
@@ -327,9 +190,7 @@ px
                             ajaxEvent="change"
                             ajaxRender="@this"
                             style="border-bottom:1px solid #ddd;" />
-
                     </ui:fragment>
-
 
                     <ui:fragment rendered="#{field.type == 'multivalue'}">
                         <br />
@@ -340,6 +201,7 @@ px
                             field="#{msgs[field.label]}"
                             name="role_#{status.index}"
                             fieldStyle="form-control" />
+
                         <intranda:formInputTextAjax
                             name="firstname_#{status.index}"
                             label="#{msgs.vorname}"
@@ -358,14 +220,25 @@ px
                             execute="@this"
                             render="@this" />
 
-
-
                     </ui:fragment>
                 </ui:repeat>
 
 
+
+            <div class="form-actions">
+                <!-- Save -->
+                <h:commandLink
+                    styleClass="btn btn-success submitOnEnter pull-right font-size-s margin-bottom-most"
+                    id="absenden"
+                    type="submit"
+                    action="#{AktuelleSchritteForm.myPlugin.saveAllChanges}">
+                    <i class="fa fa-save margin-right-5"></i>
+                    <h:outputText value="#{msgs.speichern}" />
+                </h:commandLink>
+
             </div>
 
+            </div>
         </div>
 
 
