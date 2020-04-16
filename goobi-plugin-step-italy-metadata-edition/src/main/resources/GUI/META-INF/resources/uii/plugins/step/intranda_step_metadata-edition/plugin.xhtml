@@ -15,26 +15,162 @@
 .goobi-thumbnail {
     float: left;
     margin: 7px;
-    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
-    height:#{AktuelleSchritteForm.myPlugin.thumbnailSize+55}px;            
+    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
+}
+
+px
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+;
+height
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+:
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+#{
+AktuelleSchritteForm
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+.myPlugin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.thumbnailSize
++
+55
+}
+px
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
 }
 .goobi-thumbnail .goobi-thumbnail-image {
     float: left;
     width: 100%;
     min-height: 100px;
     overflow: hidden;
-    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;            
+    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
+}
+px
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
 }
 </style>
 
-    <h:form>
+    <h:form styleClass="form-horizontal form-bordered">
 
         <div class="box box-color lightgrey box-bordered">
 
             <div class="box-title">
                 <h3>
                     <i class="fa fa-puzzle-piece"></i>
-                    <h:outputText value="#{msgs.plugin}: #{msgs[('plugin_').concat(AktuelleSchritteForm.myPlugin.title)]}" />
+                    <h:outputText value="#{msgs.plugin_italy_metadata_edition_imageSelection}" />
                 </h3>
             </div>
 
@@ -45,7 +181,7 @@
                     layout="block"
                     rendered="#{AktuelleSchritteForm.myPlugin.sizeOfImageList gt 0}">
 
-                   
+
 
                     <!-- Thumbnail list -->
                     <div
@@ -62,9 +198,9 @@
                                 <div class="goobi-thumbnail-image">
 
                                     <div class="thumb">
-                                        <h:commandLink title="#{image.tooltip}"
-                                         onclick="updateSelectedThumbnail(this);"
-                                        >
+                                        <h:commandLink
+                                            title="#{image.tooltip}"
+                                            onclick="updateSelectedThumbnail(this);">
                                             <canvas
                                                 class="thumb-canvas"
                                                 data-image_small="#{image.thumbnailUrl}"
@@ -74,10 +210,7 @@
                                             <f:setPropertyActionListener
                                                 value="#{image.order -1}"
                                                 target="#{AktuelleSchritteForm.myPlugin.imageIndex}" />
-                                            <f:ajax
-                                                execute="@form"
-                                       
-                                                />
+                                            <f:ajax execute="@form" />
 
                                         </h:commandLink>
                                     </div>
@@ -142,6 +275,100 @@
 
             </div>
         </div>
+
+        <div class="box box-color lightgrey box-bordered">
+
+            <div class="box-title">
+                <h3>
+                    <i class="fa fa-puzzle-piece"></i>
+                    <h:outputText value="#{msgs.plugin_italy_metadata_edition_properties}" />
+                </h3>
+            </div>
+
+
+            <div class="box-content nopadding">
+
+                <ui:repeat
+                    value="#{AktuelleSchritteForm.myPlugin.metadataFieldList}"
+                    var="field"
+                    varStatus="status">
+                    <ui:fragment rendered="#{field.type == 'text'}">
+                        <intranda:formInputTextAjax
+                            name="field_#{status.index}"
+                            label="#{msgs[field.label]}"
+                            field="#{field.value}"
+                            fieldStyle="form-control"
+                            required="#{field.required}"
+                            execute="@this"
+                            render="@this" />
+                    </ui:fragment>
+
+                    <ui:fragment rendered="#{field.type == 'list'}">
+                        <intranda:formInputDropDownAjax
+                            ajaxEvent="change"
+                            ajaxRender="@this"
+                            label="#{msgs[field.label]}"
+                            field="#{field.value}"
+                            name="field_#{status.index}"
+                            selectItems="#{field.valueList}"
+                            fieldStyle="form-control"
+                            required="true"
+                            var="item"
+                            itemLabel="#{item}"
+                            itemValue="#{item}" />
+                    </ui:fragment>
+
+
+                    <ui:fragment rendered="#{field.type == 'checkbox'}">
+                        <intranda:formInputCheckBoxAjax
+                            label="#{msgs[field.label]}"
+                            field="#{field.value}"
+                            name="field_#{status.index}"
+                            ajaxEvent="change"
+                            ajaxRender="@this"
+                            style="border-bottom:1px solid #ddd;" />
+
+                    </ui:fragment>
+
+
+                    <ui:fragment rendered="#{field.type == 'multivalue'}">
+                        <br />
+
+                        <intranda:formOutputText
+                            style="border-top: 1px solid black"
+                            label="#{msgs.rolle}"
+                            field="#{msgs[field.label]}"
+                            name="role_#{status.index}"
+                            fieldStyle="form-control" />
+                        <intranda:formInputTextAjax
+                            name="firstname_#{status.index}"
+                            label="#{msgs.vorname}"
+                            field="#{field.person.firstname}"
+                            fieldStyle="form-control"
+                            required="#{field.required}"
+                            execute="@this"
+                            render="@this" />
+
+                        <intranda:formInputTextAjax
+                            name="firstname_#{status.index}"
+                            label="#{msgs.nachname}"
+                            field="#{field.person.lastname}"
+                            fieldStyle="form-control"
+                            required="#{field.required}"
+                            execute="@this"
+                            render="@this" />
+
+
+
+                    </ui:fragment>
+                </ui:repeat>
+
+
+            </div>
+
+        </div>
+
+
     </h:form>
 
 

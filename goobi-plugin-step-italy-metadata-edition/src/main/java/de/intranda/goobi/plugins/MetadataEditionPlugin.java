@@ -4,10 +4,17 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.configuration.SubnodeConfiguration;
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
+import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Process;
+import org.goobi.beans.Processproperty;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.PluginGuiType;
 import org.goobi.production.enums.PluginReturnValue;
@@ -15,8 +22,10 @@ import org.goobi.production.enums.PluginType;
 import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
 
+import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.StorageProvider;
+import de.sub.goobi.helper.enums.PropertyType;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.metadaten.Image;
@@ -29,6 +38,7 @@ import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
 import ugh.dl.MetadataType;
+import ugh.dl.Person;
 import ugh.dl.Prefs;
 import ugh.exceptions.MetadataTypeNotAllowedException;
 import ugh.exceptions.PreferencesException;
@@ -84,6 +94,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private Image image = null;
 
     private int imageIndex = 0;
+
+    @Getter
+    private List<MetadataField> metadataFieldList = new ArrayList<>();
 
     @Override
     public PluginReturnValue run() {
@@ -162,36 +175,181 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             }
         }
 
-        //        String projectName = step.getProzess().getProjekt().getTitel();
-        //
-        //        XMLConfiguration xmlConfig = ConfigPlugins.getPluginConfig(getTitle());
-        //        xmlConfig.setExpressionEngine(new XPathExpressionEngine());
-        //        xmlConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-        //
-        //        SubnodeConfiguration myconfig = null;
-        //
-        //        // order of configuration is:
-        //        // 1.) project name and step name matches
-        //        // 2.) step name matches and project is *
-        //        // 3.) project name matches and step name is *
-        //        // 4.) project name and step name are *
-        //        try {
-        //            myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '" + step.getTitel() + "']");
-        //        } catch (IllegalArgumentException e) {
-        //            try {
-        //                myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '" + step.getTitel() + "']");
-        //            } catch (IllegalArgumentException e1) {
-        //                try {
-        //                    myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '*']");
-        //                } catch (IllegalArgumentException e2) {
-        //                    myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '*']");
-        //                }
-        //            }
-        //        }
-        //
-        //        initConfig(config);
+        String projectName = step.getProzess().getProjekt().getTitel();
+
+        XMLConfiguration xmlConfig = ConfigPlugins.getPluginConfig(getTitle());
+        xmlConfig.setExpressionEngine(new XPathExpressionEngine());
+        xmlConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
+
+        SubnodeConfiguration myconfig = null;
+
+        // order of configuration is:
+        // 1.) project name and step name matches
+        // 2.) step name matches and project is *
+        // 3.) project name matches and step name is *
+        // 4.) project name and step name are *
+        try {
+            myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '" + step.getTitel() + "']");
+        } catch (IllegalArgumentException e) {
+            try {
+                myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '" + step.getTitel() + "']");
+            } catch (IllegalArgumentException e1) {
+                try {
+                    myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '*']");
+                } catch (IllegalArgumentException e2) {
+                    myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '*']");
+                }
+            }
+        }
+
+        initConfig(myconfig);
 
         initImageList();
+    }
+
+    private void initConfig(SubnodeConfiguration config) {
+
+        List<Processproperty> properties = process.getEigenschaften();
+
+        // size of thumbnails
+        thumbnailSize = config.getInt("thumbnailsize", 200);
+
+        //* Allow multiple properties to be entered and selected as checkboxes, drop down lists and as input text fields
+        // get <field> list
+        List<SubnodeConfiguration> fieldList = config.configurationsAt("/field");
+        for (SubnodeConfiguration field : fieldList) {
+            // each field has source, name, type, required attributes
+            String source = field.getString("@source");
+            String name = field.getString("@name");
+            String type = field.getString("@type");
+            String label = field.getString("@label", name);
+            boolean required = field.getBoolean("@required", false);
+            String structType = field.getString("@structType", "child");
+
+            // each field can have defaultValue, validationRegex, validationErrorText, value (list) sub elements
+
+            String defaultValue = field.getString("/defaultValue", null);
+            String validationRegex = field.getString("/validationRegex", null);
+            String validationErrorText = field.getString("/validationErrorText", "Value ist invalid");
+            @SuppressWarnings("unchecked")
+            List<String> valueList = field.getList("/value", null);
+
+            boolean found = false;
+            if ("property".contains(source)) {
+                for (Processproperty prop : properties) {
+                    if (prop.getTitel().equals(name)) {
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        metadataField.setValidationRegex(validationRegex);
+                        metadataField.setValidationErrorText(validationErrorText);
+                        metadataField.setValueList(valueList);
+                        metadataField.setProperty(prop);
+                        if (StringUtils.isBlank(prop.getWert())) {
+                            prop.setWert(defaultValue);
+                        }
+                        found = true;
+                        metadataFieldList.add(metadataField);
+                    }
+                }
+                if (!found) {
+                    Processproperty property = new Processproperty();
+                    property.setContainer(0);
+                    property.setCreationDate(new Date());
+                    property.setProcessId(process.getId());
+                    property.setProzess(process);
+                    property.setTitel(name);
+                    property.setType(PropertyType.String);
+                    property.setWert(defaultValue);
+                    process.getEigenschaften().add(property);
+                    MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                    metadataField.setValidationRegex(validationRegex);
+                    metadataField.setValidationErrorText(validationErrorText);
+                    metadataField.setValueList(valueList);
+                    metadataField.setProperty(property);
+                    metadataFieldList.add(metadataField);
+                }
+            } else if ("metadata".contains(source)) {
+                List<Metadata> metadataList;
+                if (anchor != null && structType.equals("anchor")) {
+                    metadataList = anchor.getAllMetadata();
+                } else {
+                    metadataList = logical.getAllMetadata();
+                }
+                for (Metadata md : metadataList) {
+                    if (md.getType().getName().equals(name)) {
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        metadataField.setValidationRegex(validationRegex);
+                        metadataField.setValidationErrorText(validationErrorText);
+                        metadataField.setValueList(valueList);
+                        metadataField.setMetadata(md);
+                        if (StringUtils.isBlank(md.getValue())) {
+                            md.setValue(defaultValue);
+                        }
+                        found = true;
+                        metadataFieldList.add(metadataField);
+                    }
+                }
+                if (!found) {
+                    try {
+                        Metadata md = new Metadata(prefs.getMetadataTypeByName(name));
+                        md.setValue(defaultValue);
+                        if (anchor != null && structType.equals("anchor")) {
+                            anchor.addMetadata(md);
+                        } else {
+                            logical.addMetadata(md);
+                        }
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        metadataField.setValidationRegex(validationRegex);
+                        metadataField.setValidationErrorText(validationErrorText);
+                        metadataField.setValueList(valueList);
+                        metadataField.setMetadata(md);
+                        metadataFieldList.add(metadataField);
+                    } catch (MetadataTypeNotAllowedException e) {
+                        log.error(e);
+                    }
+                }
+
+            } else {
+                // person
+                List<Person> personList;
+                if (anchor != null && structType.equals("anchor")) {
+                    personList = anchor.getAllPersons();
+                } else {
+                    personList = logical.getAllPersons();
+                }
+                for (Person p : personList) {
+                    if (p.getType().getName().equals(name)) {
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        metadataField.setValidationRegex(validationRegex);
+                        metadataField.setValidationErrorText(validationErrorText);
+                        metadataField.setValueList(valueList);
+                        metadataField.setPerson(p);
+                        found = true;
+                        metadataFieldList.add(metadataField);
+                    }
+                }
+                if (!found) {
+                    try {
+                        Person person = new Person(prefs.getMetadataTypeByName(name));
+                        if (anchor != null && structType.equals("anchor")) {
+                            anchor.addPerson(person);
+                        } else {
+                            logical.addPerson(person);
+                        }
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        metadataField.setValidationRegex(validationRegex);
+                        metadataField.setValidationErrorText(validationErrorText);
+                        metadataField.setValueList(valueList);
+                        metadataField.setPerson(person);
+                    } catch (MetadataTypeNotAllowedException e) {
+                        log.error(e);
+                    }
+                }
+            }
+        }
+
+        //* Allow the search of other processes inside of Goobi to find items with the same NLI identifier and which have a specific workflow progress
+        //* Allow to duplicate metadata from a searched Goobi process into the current process
+
     }
 
     @Override
@@ -291,4 +449,5 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             }
         }
     }
+
 }
