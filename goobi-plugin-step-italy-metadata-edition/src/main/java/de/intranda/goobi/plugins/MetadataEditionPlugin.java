@@ -146,7 +146,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         imageIndex = value - 1;
                     }
                 } catch (Exception e) {
-
+                    log.error(e);
                 }
             }
         }
