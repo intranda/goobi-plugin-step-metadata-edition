@@ -31,23 +31,38 @@
         <!-- size of the thumbnail images -->
         <thumbnailsize>200</thumbnailsize>
 
-        <field source="property" name="Template" type="text" required="false">
+        <displayfield source="property" name="Template" type="text" required="false">
             <defaultValue></defaultValue>
-        </field>
-        <field source="metadata" name="PublicationYear" type="text" required="true">
+        </displayfield>
+        <displayfield source="metadata" name="PublicationYear" type="text" required="true">
 	    <validationRegex>\d{4}</validationRegex>
 	    <validationErrorText>Value must be a 4 digits year</validationErrorText>
-        </field>
-        <field source="metadata" name="singleDigCollection" type="list" required="true" label="Collection" structType="anchor">
+        </displayfield>
+        <displayfield source="metadata" name="singleDigCollection" type="list" required="true" label="Collection" structType="anchor">
             <defaultValue>Collection A</defaultValue>
             <value>Collection A</value>
             <value>Collection B</value>
             <value>Collection C</value>
-        </field>
-        <field source="metadata" name="_directionRTL" type="checkbox" label="Orientation">
+        </displayfield>
+        <displayfield source="metadata" name="_directionRTL" type="checkbox" label="Orientation">
             <defaultValue>false</defaultValue>
-        </field>
+        </displayfield>
 
-        <field source="person" name="Author" type="multivalue"></field>
+        <displayfield source="person" name="Author" type="multivalue"></displayfield>
+
+        <searchfield rulesetName="CatalogIDDigital"/>
+        
+        <importfield rulesetName="TitleDocMain" label="Titel" selectable="true"/>
+        <importfield rulesetName="PublicationYear" label="EJ" selectable="true"/>
+        <importfield rulesetName="DocLanguage" selectable="true" />
+        <importfield rulesetName="Author" selectable="true"/>
+        <importfield rulesetName="CatalogIDDigital" label="Identifier" selectable="false"/>
+        <importfield rulesetName="CatalogIdentifier" label="OPAC Eintrag" selectable="false"/>
+        <importfield rulesetName="Note" label="Bemerkung" selectable="false"/>
+        <importfield rulesetName="PlaceOfPublication" label="Erscheinungsort" selectable="false"/>
+        <importfield rulesetName="singleDigCollection"  selectable="false"/>
+        <importfield rulesetName="SizeSourcePrint"  selectable="false"/>
+        <importfield rulesetName="SubjectTopic" label="Schlagwort" selectable="true"/>
+
     </config>
 </config_plugin>
