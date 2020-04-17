@@ -242,6 +242,83 @@
         </div>
 
 
+        <div class="box box-color lightgrey box-bordered">
+
+            <div class="box-title">
+                <h3>
+                    <i class="fa fa-puzzle-piece"></i>
+                    <h:outputText value="#{msgs.plugin_italy_metadata_edition_properties}" />
+                </h3>
+            </div>
+
+
+            <div class="box-content nopadding">
+                <div class="form-group">
+                    <div class="col-sm-3 control-label">
+                        <h:outputLabel
+                            for="searchField"
+                            value="#{msgs.plugin_italy_metadata_edition_searchForProcess}" />
+                    </div>
+                    <div class="col-sm-7">
+                        <x:inputText
+                            id="searchField"
+                            styleClass="form-control"
+                            value="#{AktuelleSchritteForm.myPlugin.searchValue}" />
+                    </div>
+
+                    <div class="col-sm-2">
+                        <h:commandLink
+                            styleClass="btn btn--white btn--loader"
+                            style="border: 1px #666 solid;"
+                            action="#{AktuelleSchritteForm.myPlugin.searchForMetadata}">
+                            <i
+                                class="fa fa-search"
+                                aria-hidden="true"></i>
+                                        #{msgs.search}
+                                        <f:ajax
+                                execute="@form"
+                                render="resultList" />
+                        </h:commandLink>
+                    </div>
+                    <h:panelGroup id="resultList">
+
+                        <ui:repeat
+                            var="process"
+                            value="#{AktuelleSchritteForm.myPlugin.processList}">
+                            <hr />
+
+                            <ui:repeat
+                                var="metadata"
+                                value="#{process.metadataFieldList}">
+                                <div class="form-group">
+                                    <div class="col-sm-3 control-label">
+                                        <h:outputLabel
+                                            for="md"
+                                            value="#{metadata.label}" />
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <x:inputText
+                                            id="md"
+                                            styleClass="form-control"
+                                            value="#{metadata.value}" />
+                                    </div>
+
+                                    <div class="col-sm-1">
+                                        <h:selectBooleanCheckbox
+                                            value="#{metadata.selected}"
+                                            disabled="#{!metadata.whitelisted}" />
+
+                                    </div>
+                                </div>
+
+                            </ui:repeat>
+                        </ui:repeat>
+                    </h:panelGroup>
+
+                </div>
+            </div>
+        </div>
+
     </h:form>
 
 

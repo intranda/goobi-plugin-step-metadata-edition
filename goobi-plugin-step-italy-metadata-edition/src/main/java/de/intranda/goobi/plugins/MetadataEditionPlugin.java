@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -16,6 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Process;
 import org.goobi.beans.Processproperty;
 import org.goobi.beans.Step;
+import org.goobi.production.cli.helper.StringPair;
 import org.goobi.production.enums.PluginGuiType;
 import org.goobi.production.enums.PluginReturnValue;
 import org.goobi.production.enums.PluginType;
@@ -29,7 +31,9 @@ import de.sub.goobi.helper.enums.PropertyType;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.metadaten.Image;
+import de.sub.goobi.persistence.managers.MetadataManager;
 import de.sub.goobi.persistence.managers.PropertyManager;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
@@ -98,6 +102,17 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     @Getter
     private List<MetadataField> metadataFieldList = new ArrayList<>();
+
+    private String searchField;
+
+    @Getter
+    @Setter
+    private String searchValue;
+    @Getter
+    @Setter
+    private List<ProcessMetadata> processList;
+
+    private Map<String, WhiteListItem> metadataWhiteListToImport = new HashMap<>();
 
     @Override
     public PluginReturnValue run() {
@@ -202,22 +217,39 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
             }
         }
+        thumbnailSize = myconfig.getInt("thumbnailsize", 200);
 
-        initConfig(myconfig);
+        initDisplayFields(myconfig);
+
+        initSearchFields(myconfig);
 
         initImageList();
     }
 
-    private void initConfig(SubnodeConfiguration config) {
+    private void initSearchFields(SubnodeConfiguration config) {
+        searchField = config.getString("searchfield/@rulesetName");
+
+        @SuppressWarnings("unchecked")
+        List<SubnodeConfiguration> fieldList = config.configurationsAt("/importfield");
+        for (SubnodeConfiguration field : fieldList) {
+            String rulesetName = field.getString("@rulesetName");
+            String label = field.getString("@label", rulesetName);
+            boolean selectable = field.getBoolean("@selectable", false);
+            WhiteListItem wli = new WhiteListItem(rulesetName, label, selectable);
+            metadataWhiteListToImport.put(rulesetName, wli);
+        }
+    }
+
+    private void initDisplayFields(SubnodeConfiguration config) {
 
         List<Processproperty> properties = process.getEigenschaften();
 
         // size of thumbnails
-        thumbnailSize = config.getInt("thumbnailsize", 200);
 
         //* Allow multiple properties to be entered and selected as checkboxes, drop down lists and as input text fields
         // get <field> list
-        List<SubnodeConfiguration> fieldList = config.configurationsAt("/field");
+        @SuppressWarnings("unchecked")
+        List<SubnodeConfiguration> fieldList = config.configurationsAt("/displayfield");
         for (SubnodeConfiguration field : fieldList) {
             // each field has source, name, type, required attributes
             String source = field.getString("@source");
@@ -408,7 +440,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         // save properties
         for (MetadataField mf : metadataFieldList) {
-            if (mf.getProperty()!= null) {
+            if (mf.getProperty() != null) {
                 PropertyManager.saveProcessProperty(mf.getProperty());
             }
         }
@@ -463,6 +495,30 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         } catch (WriteException | PreferencesException | IOException | InterruptedException | SwapException | DAOException e) {
             log.error(e);
         }
+    }
+
+    public void searchForMetadata() {
+
+        List<Integer> foundProcessIds = MetadataManager.getProcessesWithMetadata(searchField, searchValue);
+
+        processList = new ArrayList<>(foundProcessIds.size());
+
+        for (Integer id : foundProcessIds) {
+            List<StringPair> metadataList = MetadataManager.getMetadata(id);
+            ProcessMetadata pm = new ProcessMetadata(id, metadataList, metadataWhiteListToImport);
+            processList.add(pm);
+        }
+
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public class WhiteListItem {
+        private String rulesetName;
+        private String label;
+        private boolean selectable;
+
+
     }
 
 }
