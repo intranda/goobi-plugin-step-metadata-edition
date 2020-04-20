@@ -3,7 +3,11 @@ package de.intranda.goobi.plugins;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +17,9 @@ import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Process;
 import org.goobi.beans.Processproperty;
@@ -24,6 +31,7 @@ import org.goobi.production.enums.PluginType;
 import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
 
+import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.StorageProvider;
@@ -32,6 +40,8 @@ import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.metadaten.Image;
 import de.sub.goobi.persistence.managers.MetadataManager;
+import de.sub.goobi.persistence.managers.MySQLHelper;
+import de.sub.goobi.persistence.managers.ProcessManager;
 import de.sub.goobi.persistence.managers.PropertyManager;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -113,6 +123,13 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private List<ProcessMetadata> processList;
 
     private Map<String, WhiteListItem> metadataWhiteListToImport = new HashMap<>();
+    private boolean preselectFields;
+
+    @Getter
+    @Setter
+    private ProcessMetadata selectedProcess;
+
+    private SubnodeConfiguration myconfig = null;
 
     @Override
     public PluginReturnValue run() {
@@ -197,8 +214,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         xmlConfig.setExpressionEngine(new XPathExpressionEngine());
         xmlConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
 
-        SubnodeConfiguration myconfig = null;
-
         // order of configuration is:
         // 1.) project name and step name matches
         // 2.) step name matches and project is *
@@ -228,7 +243,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     private void initSearchFields(SubnodeConfiguration config) {
         searchField = config.getString("searchfield/@rulesetName");
-
+        preselectFields = config.getBoolean("/preselectFields");
         @SuppressWarnings("unchecked")
         List<SubnodeConfiguration> fieldList = config.configurationsAt("/importfield");
         for (SubnodeConfiguration field : fieldList) {
@@ -238,13 +253,14 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             WhiteListItem wli = new WhiteListItem(rulesetName, label, selectable);
             metadataWhiteListToImport.put(rulesetName, wli);
         }
+
     }
 
     private void initDisplayFields(SubnodeConfiguration config) {
 
         List<Processproperty> properties = process.getEigenschaften();
 
-        // size of thumbnails
+        metadataFieldList.clear();
 
         //* Allow multiple properties to be entered and selected as checkboxes, drop down lists and as input text fields
         // get <field> list
@@ -436,6 +452,131 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         }
     }
 
+    // import metadata from other process
+    public void importMetadataFromExternalProcess() {
+        if (selectedProcess == null) {
+            return;
+        }
+        // load metadata of the process
+        Process other = ProcessManager.getProcessById(selectedProcess.getProcessId());
+        DocStruct otherLogical = null;
+        DocStruct otherAnchor = null;
+        try {
+            Fileformat otherFormat = other.readMetadataFile();
+
+            otherLogical = otherFormat.getDigitalDocument().getLogicalDocStruct();
+            if (otherLogical.getType().isAnchor()) {
+                otherAnchor = otherLogical;
+                otherLogical = otherLogical.getAllChildren().get(0);
+            }
+
+        } catch (ReadException | PreferencesException | WriteException | IOException | InterruptedException | SwapException | DAOException e) {
+            log.error(e);
+        }
+
+        // get list of metadata types
+        List<String> metadataTypesToDelete = new ArrayList<>();
+        for (ProcessMetadataField pmf : selectedProcess.getMetadataFieldList()) {
+            if (pmf.isSelected() && !metadataTypesToDelete.contains(pmf.getMetadataName())) {
+                metadataTypesToDelete.add(pmf.getMetadataName());
+            }
+        }
+        // remove existing types from current element
+        for (String metadataType : metadataTypesToDelete) {
+            removeMetadata(metadataType, logical);
+        }
+        if (anchor != null) {
+            for (String metadataType : metadataTypesToDelete) {
+                removeMetadata(metadataType, anchor);
+            }
+        }
+
+        // add new metadata
+        for (ProcessMetadataField pmf : selectedProcess.getMetadataFieldList()) {
+            if (pmf.isSelected()) {
+                importSelectedMetadata(otherLogical, pmf, logical);
+            }
+            if (anchor != null && otherAnchor != null) {
+                importSelectedMetadata(otherAnchor, pmf, anchor);
+            }
+        }
+
+        // update metadataFieldList
+        initDisplayFields(myconfig);
+    }
+
+    private void importSelectedMetadata(DocStruct source, ProcessMetadataField pmf, DocStruct destination) {
+        MetadataType mdt = prefs.getMetadataTypeByName(pmf.getMetadataName());
+        if (mdt.getIsPerson()) {
+            List<Person> personList = source.getAllPersonsByType(mdt);
+            Person personToImport = null;
+            if (personList != null) {
+                for (Person person : personList) {
+                    if (StringUtils.isNotBlank(person.getFirstname()) && StringUtils.isNotBlank(person.getLastname())) {
+                        if (pmf.getValue().equals(person.getFirstname() + " " + person.getLastname())) {
+                            personToImport = person;
+                            break;
+                        }
+                    } else if (StringUtils.isNotBlank(person.getFirstname()) && pmf.getValue().equals(person.getFirstname())) {
+                        personToImport = person;
+                        break;
+                    } else if (pmf.getValue().equals(person.getLastname())) {
+                        personToImport = person;
+                        break;
+                    }
+                }
+            }
+            if (personToImport != null) {
+                try {
+                    Person p = new Person(mdt);
+                    p.setFirstname(personToImport.getFirstname());
+                    p.setLastname(personToImport.getLastname());
+                    p.setAutorityFile(personToImport.getAuthorityID(), personToImport.getAuthorityURI(), personToImport.getAuthorityValue());
+                    destination.addPerson(p);
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+            }
+        } else {
+            List<? extends Metadata> metadataList = source.getAllMetadataByType(mdt);
+            Metadata metadataToImport = null;
+            if (metadataList != null) {
+                for (Metadata metadata : metadataList) {
+                    if (pmf.getValue().equals(metadata.getValue())) {
+                        metadataToImport = metadata;
+                        break;
+                    }
+
+                }
+            }
+            if (metadataToImport != null) {
+                try {
+                    Metadata md = new Metadata(mdt);
+                    md.setValue(metadataToImport.getValue());
+                    md.setAutorityFile(metadataToImport.getAuthorityID(), metadataToImport.getAuthorityURI(), metadataToImport.getAuthorityValue());
+                    destination.addMetadata(md);
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+            }
+        }
+    }
+
+    private void removeMetadata(String metadataType, DocStruct docstruct) {
+        List<? extends Metadata> mdl = docstruct.getAllMetadataByType(prefs.getMetadataTypeByName(metadataType));
+        if (mdl != null) {
+            for (Metadata md : mdl) {
+                docstruct.removeMetadata(md);
+            }
+        }
+        List<Person> personList = docstruct.getAllPersonsByType(prefs.getMetadataTypeByName(metadataType));
+        if (personList != null) {
+            for (Person p : personList) {
+                docstruct.removePerson(p);
+            }
+        }
+    }
+
     public void saveAllChanges() {
 
         // save properties
@@ -499,17 +640,59 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void searchForMetadata() {
 
-        List<Integer> foundProcessIds = MetadataManager.getProcessesWithMetadata(searchField, searchValue);
+        Map<Integer, String> foundProcessIds = getAllProcessesWithMetadata(searchField, searchValue);
 
         processList = new ArrayList<>(foundProcessIds.size());
 
-        for (Integer id : foundProcessIds) {
+        for (Integer id : foundProcessIds.keySet()) {
             List<StringPair> metadataList = MetadataManager.getMetadata(id);
-            ProcessMetadata pm = new ProcessMetadata(id, metadataList, metadataWhiteListToImport);
+            ProcessMetadata pm = new ProcessMetadata(id, foundProcessIds.get(id), metadataList, metadataWhiteListToImport, preselectFields);
             processList.add(pm);
         }
-
     }
+
+    // get process id and title of all processes with a given metadata
+
+    private static Map<Integer, String> getAllProcessesWithMetadata(String name, String value) {
+        String sql = "SELECT processid, titel FROM metadata left join prozesse on processid = prozesseid WHERE name = ? and value LIKE '%"
+                + StringEscapeUtils.escapeSql(value) + "%'";
+        Connection connection = null;
+        try {
+            connection = MySQLHelper.getInstance().getConnection();
+            return new QueryRunner().query(connection, sql, resultSetToMapHandler, name);
+
+        } catch (SQLException e) {
+            log.error(e);
+        } finally {
+            if (connection != null) {
+                try {
+                    MySQLHelper.closeConnection(connection);
+                } catch (SQLException e) {
+                    log.error(e);
+                }
+            }
+        }
+        return Collections.emptyMap();
+    }
+
+    public static ResultSetHandler<Map<Integer, String>> resultSetToMapHandler = new ResultSetHandler<Map<Integer, String>>() {
+        @Override
+        public Map<Integer, String> handle(ResultSet rs) throws SQLException {
+            Map<Integer, String> answer = new HashMap<>();
+            try {
+                while (rs.next()) {
+                    Integer processid = rs.getInt("processid");
+                    String processTitle = rs.getString("titel");
+                    answer.put(processid, processTitle);
+                }
+            } finally {
+                if (rs != null) {
+                    rs.close();
+                }
+            }
+            return answer;
+        }
+    };
 
     @AllArgsConstructor
     @Getter
@@ -517,8 +700,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         private String rulesetName;
         private String label;
         private boolean selectable;
-
-
     }
 
 }

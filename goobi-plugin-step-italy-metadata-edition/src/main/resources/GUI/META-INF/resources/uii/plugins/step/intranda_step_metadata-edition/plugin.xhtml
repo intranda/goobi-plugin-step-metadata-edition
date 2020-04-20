@@ -15,15 +15,30 @@
 .goobi-thumbnail {
     float: left;
     margin: 7px;
-    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
-    height:#{AktuelleSchritteForm.myPlugin.thumbnailSize+55}px;
+    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
+}
+
+px ;
+    height: #{AktuelleSchritteForm .myPlugin.thumbnailSize+55
+    
+}
+
+px
+;
+
+
 }
 .goobi-thumbnail .goobi-thumbnail-image {
     float: left;
     width: 100%;
     min-height: 100px;
     overflow: hidden;
-    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
+    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
+}
+px
+;
+
+
 }
 </style>
 
@@ -225,18 +240,18 @@
 
 
 
-            <div class="form-actions">
-                <!-- Save -->
-                <h:commandLink
-                    styleClass="btn btn-success submitOnEnter pull-right font-size-s margin-bottom-most"
-                    id="absenden"
-                    type="submit"
-                    action="#{AktuelleSchritteForm.myPlugin.saveAllChanges}">
-                    <i class="fa fa-save margin-right-5"></i>
-                    <h:outputText value="#{msgs.speichern}" />
-                </h:commandLink>
+                <div class="form-actions">
+                    <!-- Save -->
+                    <h:commandLink
+                        styleClass="btn btn-success submitOnEnter pull-right font-size-s margin-bottom-most"
+                        id="absenden"
+                        type="submit"
+                        action="#{AktuelleSchritteForm.myPlugin.saveAllChanges}">
+                        <i class="fa fa-save margin-right-5"></i>
+                        <h:outputText value="#{msgs.speichern}" />
+                    </h:commandLink>
 
-            </div>
+                </div>
 
             </div>
         </div>
@@ -267,25 +282,44 @@
                     </div>
 
                     <div class="col-sm-2">
+
                         <h:commandLink
-                            styleClass="btn btn--white btn--loader"
-                            style="border: 1px #666 solid;"
+                            styleClass="btn btn-primary pull-right font-size-s margin-bottom-most"
                             action="#{AktuelleSchritteForm.myPlugin.searchForMetadata}">
-                            <i
-                                class="fa fa-search"
-                                aria-hidden="true"></i>
-                                        #{msgs.search}
-                                        <f:ajax
+                            <i class="fa fa-search margin-right-5"></i>
+                            <h:outputText value="#{msgs.search}" />
+                            <f:ajax
                                 execute="@form"
                                 render="resultList" />
                         </h:commandLink>
+
+
+
                     </div>
-                    <h:panelGroup id="resultList">
+                    <h:panelGroup
+                        id="resultList"
+                        layout="block">
 
                         <ui:repeat
                             var="process"
-                            value="#{AktuelleSchritteForm.myPlugin.processList}">
+                            value="#{AktuelleSchritteForm.myPlugin.processList}"
+                            varStatus="processStatus">
                             <hr />
+
+
+                            <div class="form-group">
+                                <h:outputLabel
+                                    for="processtitle"
+                                    styleClass="control-label col-sm-3"
+                                    value="#{msgs.titel}" />
+                                <div class="col-sm-9">
+                                    <x:outputText
+                                        id="processtitle"
+                                        style="border:0px;background: #f6f6f6;"
+                                        styleClass="form-control"
+                                        value="#{process.processTitle}" />
+                                </div>
+                            </div>
 
                             <ui:repeat
                                 var="metadata"
@@ -297,7 +331,7 @@
                                             value="#{metadata.label}" />
                                     </div>
                                     <div class="col-sm-8">
-                                        <x:inputText
+                                        <x:outputText
                                             id="md"
                                             styleClass="form-control"
                                             value="#{metadata.value}" />
@@ -312,6 +346,19 @@
                                 </div>
 
                             </ui:repeat>
+                            <h:commandLink
+                                styleClass="btn btn-primary pull-right font-size-s margin-bottom-most margin-right-5"
+                                action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}">
+                                <i class="fa fa-save margin-right-5"></i>
+                                <h:outputText value="#{msgs.plugin_italy_metadata_edition_importSelectedMetadata}" />
+                                <f:ajax
+                                    execute="@form"
+                                    render="@form" />
+                                <f:setPropertyActionListener
+                                    value="#{process}"
+                                    target="#{AktuelleSchritteForm.myPlugin.selectedProcess}" />
+                            </h:commandLink>
+
                         </ui:repeat>
                     </h:panelGroup>
 

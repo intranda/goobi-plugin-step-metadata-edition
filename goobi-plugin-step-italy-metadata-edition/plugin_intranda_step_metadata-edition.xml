@@ -50,8 +50,13 @@
 
         <displayfield source="person" name="Author" type="multivalue"></displayfield>
 
-        <searchfield rulesetName="CatalogIDDigital"/>
-        
+
+<displayfield source="metadata" name="TitleDocMain" type="text" required="false" />
+<displayfield source="metadata" name="PublicationYear" type="text" required="false" />
+<displayfield source="metadata" name="DocLanguage" type="text" required="false" />
+
+        <searchfield rulesetName="TitleDocMain"/>
+        <preselectFields>true</preselectFields>
         <importfield rulesetName="TitleDocMain" label="Titel" selectable="true"/>
         <importfield rulesetName="PublicationYear" label="EJ" selectable="true"/>
         <importfield rulesetName="DocLanguage" selectable="true" />

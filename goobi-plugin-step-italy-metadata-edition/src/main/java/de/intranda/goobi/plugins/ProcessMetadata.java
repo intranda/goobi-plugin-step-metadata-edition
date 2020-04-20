@@ -14,6 +14,9 @@ public class ProcessMetadata {
     @Getter
     private Integer processId;
     @Getter
+    private String processTitle;
+
+    @Getter
     private List<ProcessMetadataField> metadataFieldList = new ArrayList<>();
 
     /**
@@ -22,19 +25,23 @@ public class ProcessMetadata {
      * @param whitelistedFieldNames map of white list elements, key is the ruleset name, value a label to display
      */
 
-    public ProcessMetadata(Integer processid, List<StringPair> metadataList, Map<String, WhiteListItem> whitelistedFieldNames) {
+    public ProcessMetadata(Integer processid, String processTitle, List<StringPair> metadataList, Map<String, WhiteListItem> whitelistedFieldNames,
+            boolean preselectFields) {
         this.processId = processid;
+        this.processTitle = processTitle;
         for (StringPair metadata : metadataList) {
             if (whitelistedFieldNames.containsKey(metadata.getOne())) {
-                WhiteListItem wli =  whitelistedFieldNames.get(metadata.getOne());
+                WhiteListItem wli = whitelistedFieldNames.get(metadata.getOne());
 
                 ProcessMetadataField pmf = new ProcessMetadataField();
                 pmf.setMetadataName(metadata.getOne());
                 pmf.setValue(metadata.getTwo());
                 pmf.setLabel(wli.getLabel());
 
-
                 pmf.setWhitelisted(wli.isSelectable());
+                if (preselectFields && pmf.isWhitelisted()) {
+                    pmf.setSelected(true);
+                }
                 metadataFieldList.add(pmf);
             }
         }
@@ -50,4 +57,5 @@ public class ProcessMetadata {
         private String label;
         private String value;
 
-    }}
+    }
+}
