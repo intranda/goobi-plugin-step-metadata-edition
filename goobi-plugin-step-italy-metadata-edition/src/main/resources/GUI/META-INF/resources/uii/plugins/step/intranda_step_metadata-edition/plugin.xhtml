@@ -15,30 +15,15 @@
 .goobi-thumbnail {
     float: left;
     margin: 7px;
-    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
-}
-
-px ;
-    height: #{AktuelleSchritteForm .myPlugin.thumbnailSize+55
-    
-}
-
-px
-;
-
-
+    width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px ;
+    height: #{AktuelleSchritteForm .myPlugin.thumbnailSize+55}px;
 }
 .goobi-thumbnail .goobi-thumbnail-image {
     float: left;
     width: 100%;
     min-height: 100px;
     overflow: hidden;
-    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2
-}
-px
-;
-
-
+    max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
 }
 </style>
 
@@ -256,47 +241,86 @@ px
             </div>
         </div>
 
+    </h:form>
 
-        <div class="box box-color lightgrey box-bordered">
+    <h:form styleClass="form-horizontal form-bordered">
 
-            <div class="box-title">
-                <h3>
-                    <i class="fa fa-puzzle-piece"></i>
-                    <h:outputText value="#{msgs.plugin_italy_metadata_edition_properties}" />
-                </h3>
-            </div>
+        <h:commandLink
+            styleClass="change-icon geonamesIndexTrigger"
+            title="#{msgs.plugin_italy_metadata_edition_searchForProcess}"
+            onclick="$('#searchBox').modal('show');">
 
+            <h:outputText value="#{msgs.plugin_italy_metadata_edition_searchForProcess}" />
+            <f:ajax
+                execute="@this"
+                render=":modalContent" />
+        </h:commandLink>
 
-            <div class="box-content nopadding">
-                <div class="form-group">
-                    <div class="col-sm-3 control-label">
-                        <h:outputLabel
-                            for="searchField"
-                            value="#{msgs.plugin_italy_metadata_edition_searchForProcess}" />
+        <div
+            class="modal fade"
+            id="searchBox"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="searchBoxLabel"
+            aria-hidden="true">
+            <div
+                class="modal-dialog"
+                role="document">
+                <h:panelGroup
+                    id="modalContent"
+                    layout="block"
+                    styleClass="modal-content">
+                    <div class="modal-header">
+                        <h5
+                            class="modal-title"
+                            id="searchBoxLabel">#{msgs.plugin_italy_metadata_edition_searchForProcess}</h5>
+
+                        <button
+                            type="button"
+                            class="close"
+                            data-dismiss="modal"
+                            aria-label="Close">
+                            <span aria-hidden="true">
+                                <h:outputText
+                                    value="&amp;times;"
+                                    escape="false" />
+                            </span>
+                        </button>
                     </div>
-                    <div class="col-sm-7">
-                        <x:inputText
-                            id="searchField"
-                            styleClass="form-control"
-                            value="#{AktuelleSchritteForm.myPlugin.searchValue}" />
-                    </div>
+                    <div class="modal-body">
+                        <p>#{msgs.plugin_italy_metadata_edition_helpSearchForProcess}</p>
 
-                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <div class="col-sm-3 control-label">
+                                <h:outputLabel
+                                    for="searchField"
+                                    value="#{msgs.plugin_italy_metadata_edition_searchForProcess}" />
+                            </div>
+                            <div class="col-sm-7">
+                                <x:inputText
+                                    id="searchField"
+                                    styleClass="form-control"
+                                    value="#{AktuelleSchritteForm.myPlugin.searchValue}" />
+                            </div>
 
-                        <h:commandLink
-                            styleClass="btn btn-primary pull-right font-size-s margin-bottom-most"
-                            action="#{AktuelleSchritteForm.myPlugin.searchForMetadata}">
-                            <i class="fa fa-search margin-right-5"></i>
-                            <h:outputText value="#{msgs.search}" />
-                            <f:ajax
-                                execute="@form"
-                                render="resultList" />
-                        </h:commandLink>
+                            <div class="col-sm-2">
+
+                                <h:commandLink
+                                    styleClass="btn btn-primary pull-right font-size-s margin-bottom-most"
+                                    action="#{AktuelleSchritteForm.myPlugin.searchForMetadata}">
+                                    <i class="fa fa-search margin-right-5"></i>
+                                    <h:outputText value="#{msgs.search}" />
+                                    <f:ajax
+                                        execute="@form"
+                                        render="resultList" />
+                                </h:commandLink>
 
 
 
-                    </div>
-                    <h:panelGroup
+                            </div>
+                        </div>
+
+<h:panelGroup
                         id="resultList"
                         layout="block">
 
@@ -351,9 +375,7 @@ px
                                 action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}">
                                 <i class="fa fa-save margin-right-5"></i>
                                 <h:outputText value="#{msgs.plugin_italy_metadata_edition_importSelectedMetadata}" />
-                                <f:ajax
-                                    execute="@form"
-                                    render="@form" />
+                               
                                 <f:setPropertyActionListener
                                     value="#{process}"
                                     target="#{AktuelleSchritteForm.myPlugin.selectedProcess}" />
@@ -361,10 +383,15 @@ px
 
                         </ui:repeat>
                     </h:panelGroup>
-
-                </div>
+                    </div>
+                </h:panelGroup>
             </div>
         </div>
+
+
+        
+                
+                    
 
     </h:form>
 
