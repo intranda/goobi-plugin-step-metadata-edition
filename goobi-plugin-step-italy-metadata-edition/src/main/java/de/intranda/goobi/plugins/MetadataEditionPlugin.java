@@ -131,6 +131,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     private SubnodeConfiguration myconfig = null;
 
+    @Getter @Setter
+    private boolean collapsedImageSelection = false;
+
+    @Getter @Setter
+    private boolean collapsedProperties= false;
+
     @Override
     public PluginReturnValue run() {
         return PluginReturnValue.FINISH;
@@ -700,6 +706,10 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         private String rulesetName;
         private String label;
         private boolean selectable;
+    }
+
+    public boolean getProcessListIsEmpty() {
+        return processList== null || processList.isEmpty();
     }
 
 }

@@ -192,8 +192,20 @@
     margin-left: 86px;
 }
 
-.scrollable {
+.scrollable, .scroll {
     max-height: 500px;
     overflow-y: auto;
     overflow-x: hidden;
+    width: auto;
+}
+
+.modal-header .close, .modal-header .close:hover, .modal-header .close:active,
+    .modal-header .close:focus {
+    color: #fff;
+}
+
+.btn--icon-green, .btn--icon-green:focus, .btn--icon-green:active,
+    .btn--icon-green:hover {
+    color: #fff;
+    background-color: #40bf40;
 }
