@@ -683,7 +683,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     }
 
     public void searchForMetadata() {
-        String sql = FilterHelper.criteriaBuilder(searchValue, false, null, null, null, true, false);
+        String sql = FilterHelper.criteriaBuilder(searchValue + " -id:" + process.getId(), false, null, null, null, true, false);
         sql = sql + " and prozesse.istTemplate = false ";
         Map<Integer, String> foundProcessIds = getAllProcessesWithMetadata(sql);
 
@@ -801,7 +801,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             searchQuery.append(suffix);
         }
         // exclude current process id
-        //        searchQuery.append(" -id:").append(process.getId());
+        searchQuery.append(" -id:").append(process.getId());
 
         String sql = FilterHelper.criteriaBuilder(searchQuery.toString(), false, null, null, null, true, false);
         sql = sql + " and prozesse.istTemplate = false ";

@@ -29,14 +29,14 @@
         <project>*</project>
         <step>*</step>
         <!-- size of the thumbnail images -->
-        <thumbnailsize>200</thumbnailsize>
+        <thumbnailsize>100</thumbnailsize>
 
         <displayfield source="property" name="Template" type="text" required="false">
             <defaultValue></defaultValue>
         </displayfield>
         <displayfield source="metadata" name="PublicationYear" type="text" required="true">
-	    <validationRegex>\d{4}</validationRegex>
-	    <validationErrorText>Value must be a 4 digits year</validationErrorText>
+    	    <validationRegex>\d{4}</validationRegex>
+    	    <validationErrorText>Value must be a 4 digits year</validationErrorText>
         </displayfield>
         <displayfield source="metadata" name="singleDigCollection" type="list" required="true" label="Collection" structType="anchor">
             <defaultValue>Collection A</defaultValue>
@@ -48,23 +48,22 @@
             <defaultValue>false</defaultValue>
         </displayfield>
 
-        <displayfield source="person" name="Author" type="multivalue"></displayfield>
+        <displayfield source="person" name="Author" type="multivalue" searchable="true" />
+        <displayfield source="metadata" name="TitleDocMain" type="text" required="false" label="Haupttitel" searchable="true" suffix=" steplocked:Validierung"/>
+        <displayfield source="metadata" name="DocLanguage" type="text" required="false" label="Sprache"/>
 
 
-<displayfield source="metadata" name="TitleDocMain" type="text" required="false" />
-<displayfield source="metadata" name="PublicationYear" type="text" required="false" />
-<displayfield source="metadata" name="DocLanguage" type="text" required="false" />
-
-        <searchfield rulesetName="TitleDocMain"/>
-        <preselectFields>true</preselectFields>
+        
+        <preselectFields>false</preselectFields>
+        
         <importfield rulesetName="TitleDocMain" label="Titel" selectable="true"/>
-        <importfield rulesetName="PublicationYear" label="EJ" selectable="true"/>
-        <importfield rulesetName="DocLanguage" selectable="true" />
+        <importfield rulesetName="PublicationYear" label="Erscheinungsjahr" selectable="true"/>
+        <importfield rulesetName="DocLanguage" selectable="true" label="Sprache"/>
         <importfield rulesetName="Author" selectable="true"/>
         <importfield rulesetName="CatalogIDDigital" label="Identifier" selectable="false"/>
         <importfield rulesetName="CatalogIdentifier" label="OPAC Eintrag" selectable="false"/>
         <importfield rulesetName="Note" label="Bemerkung" selectable="false"/>
-        <importfield rulesetName="PlaceOfPublication" label="Erscheinungsort" selectable="false"/>
+        <importfield rulesetName="PlaceOfPublication" label="Erscheinungsort" selectable="true"/>
         <importfield rulesetName="singleDigCollection"  selectable="false"/>
         <importfield rulesetName="SizeSourcePrint"  selectable="false"/>
         <importfield rulesetName="SubjectTopic" label="Schlagwort" selectable="true"/>
