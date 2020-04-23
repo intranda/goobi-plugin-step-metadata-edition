@@ -118,8 +118,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Setter
     private MetadataField currentField;
 
-    private String searchField;
-
     @Getter
     @Setter
     private String searchValue;
@@ -147,7 +145,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     @Setter
     private boolean displaySearchPopup = false;
-
+    @Getter
+    @Setter
+    private boolean displaySearchOption = false;
 
     @Override
     public PluginReturnValue run() {
@@ -260,7 +260,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     }
 
     private void initSearchFields(SubnodeConfiguration config) {
-        searchField = config.getString("searchfield/@rulesetName");
         preselectFields = config.getBoolean("/preselectFields");
         @SuppressWarnings("unchecked")
         List<SubnodeConfiguration> fieldList = config.configurationsAt("/importfield");
@@ -684,8 +683,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     }
 
     public void searchForMetadata() {
-        // TODO value to filter
-        Map<Integer, String> foundProcessIds = getAllProcessesWithMetadata("");
+        String sql = FilterHelper.criteriaBuilder(searchValue, false, null, null, null, true, false);
+        sql = sql + " and prozesse.istTemplate = false ";
+        Map<Integer, String> foundProcessIds = getAllProcessesWithMetadata(sql);
 
         processList = new ArrayList<>(foundProcessIds.size());
 
@@ -814,11 +814,17 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             ProcessMetadata pm = new ProcessMetadata(id, foundProcessIds.get(id), metadataList, metadataWhiteListToImport, preselectFields);
             processList.add(pm);
         }
-
+        displaySearchOption = false;
         displaySearchPopup=true;
     }
 
     public void handleClose(CloseEvent event) {
         displaySearchPopup=false;
+    }
+
+
+    public void openPopup ( ) {
+        displaySearchOption = true;
+        displaySearchPopup=true;
     }
 }
