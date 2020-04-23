@@ -824,6 +824,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
 
     public void openPopup ( ) {
+        processList=null;
         displaySearchOption = true;
         displaySearchPopup=true;
     }

@@ -29,7 +29,7 @@
         <project>*</project>
         <step>*</step>
         <!-- size of the thumbnail images -->
-        <thumbnailsize>100</thumbnailsize>
+        <thumbnailsize>200</thumbnailsize>
 
         <displayfield source="property" name="Template" type="text" required="false">
             <defaultValue></defaultValue>
@@ -50,7 +50,7 @@
 
         <displayfield source="person" name="Author" type="multivalue" searchable="true" />
         <displayfield source="metadata" name="TitleDocMain" type="text" required="false" label="Haupttitel" searchable="true" suffix=" steplocked:Validierung"/>
-        <displayfield source="metadata" name="DocLanguage" type="text" required="false" label="Sprache"/>
+        <displayfield source="metadata" name="DocLanguage" type="text" required="false" label="Sprache"  searchable="true"/>
 
 
         

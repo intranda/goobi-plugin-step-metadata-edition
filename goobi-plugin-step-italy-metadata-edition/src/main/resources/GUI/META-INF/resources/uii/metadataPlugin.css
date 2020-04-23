@@ -209,3 +209,40 @@
     color: #fff;
     background-color: #40bf40;
 }
+
+
+.ui-widget.ui-widget-content {
+    border-color: #666;
+}
+
+.ui-widget.ui-shadow {
+    box-shadow: none;
+}
+
+.ui-widget-header {
+    text-shadow: none;
+    /*     color: #fff; */
+    background-color: #666;
+    color: #fff;
+}
+
+.ui-widget-header .ui-dialog-title {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.ui-widget-header a {
+    color: #fff;
+}
+
+#processSearchButton {
+    background-color: #666;
+}
+
+.ui-widget-header a.ui-state-hover {
+    border: 1px solid transparent;
+    background: none;
+    background-color: #fff;
+    box-shadow: none;
+    background: none;
+}
