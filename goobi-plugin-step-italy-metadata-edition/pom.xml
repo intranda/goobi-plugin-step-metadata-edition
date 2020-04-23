@@ -35,6 +35,34 @@
     </modules>
     
     <dependencies>
+    <dependency>
+            <groupId>de.intranda.ugh</groupId>
+            <artifactId>ugh-core</artifactId>
+            <version>4.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>poi</groupId>
+                    <artifactId>poi</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>de.intranda.other</groupId>
+                    <artifactId>mods</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>de.intranda.other</groupId>
+                    <artifactId>mets</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    
         <dependency>
             <groupId>de.intranda.goobi.workflow</groupId>
             <artifactId>goobi-core-jar</artifactId>

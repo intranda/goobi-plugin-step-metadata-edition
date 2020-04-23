@@ -54,6 +54,11 @@ public class MetadataField {
     // list of possible values for type="list"
     private List<String> valueList;
 
+    @NonNull
+    private Boolean searchable;
+
+    private String searchSuffix;
+
     public void setValue(String value) {
         if (metadata != null) {
             metadata.setValue(value);

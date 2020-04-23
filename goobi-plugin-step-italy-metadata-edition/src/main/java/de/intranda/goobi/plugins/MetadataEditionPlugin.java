@@ -19,7 +19,6 @@ import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Process;
 import org.goobi.beans.Processproperty;
@@ -29,7 +28,9 @@ import org.goobi.production.enums.PluginGuiType;
 import org.goobi.production.enums.PluginReturnValue;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.enums.StepReturnValue;
+import org.goobi.production.flow.statistics.hibernate.FilterHelper;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
+import org.primefaces.event.CloseEvent;
 
 import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
 import de.sub.goobi.config.ConfigPlugins;
@@ -113,6 +114,10 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     private List<MetadataField> metadataFieldList = new ArrayList<>();
 
+    @Getter
+    @Setter
+    private MetadataField currentField;
+
     private String searchField;
 
     @Getter
@@ -131,11 +136,18 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     private SubnodeConfiguration myconfig = null;
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private boolean collapsedImageSelection = false;
 
-    @Getter @Setter
-    private boolean collapsedProperties= false;
+    @Getter
+    @Setter
+    private boolean collapsedProperties = false;
+
+    @Getter
+    @Setter
+    private boolean displaySearchPopup = false;
+
 
     @Override
     public PluginReturnValue run() {
@@ -281,6 +293,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             boolean required = field.getBoolean("@required", false);
             String structType = field.getString("@structType", "child");
 
+            boolean searchable = field.getBoolean("@searchable", false);
+            String searchSuffix = field.getString("@suffix");
+
             // each field can have defaultValue, validationRegex, validationErrorText, value (list) sub elements
 
             String defaultValue = field.getString("/defaultValue", null);
@@ -293,11 +308,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             if ("property".contains(source)) {
                 for (Processproperty prop : properties) {
                     if (prop.getTitel().equals(name)) {
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);
                         metadataField.setProperty(prop);
+                        metadataField.setSearchSuffix(searchSuffix);
                         if (StringUtils.isBlank(prop.getWert())) {
                             prop.setWert(defaultValue);
                         }
@@ -315,11 +331,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     property.setType(PropertyType.String);
                     property.setWert(defaultValue);
                     process.getEigenschaften().add(property);
-                    MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                    MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
                     metadataField.setValidationRegex(validationRegex);
                     metadataField.setValidationErrorText(validationErrorText);
                     metadataField.setValueList(valueList);
                     metadataField.setProperty(property);
+                    metadataField.setSearchSuffix(searchSuffix);
                     metadataFieldList.add(metadataField);
                 }
             } else if ("metadata".contains(source)) {
@@ -331,11 +348,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
                 for (Metadata md : metadataList) {
                     if (md.getType().getName().equals(name)) {
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);
                         metadataField.setMetadata(md);
+                        metadataField.setSearchSuffix(searchSuffix);
                         if (StringUtils.isBlank(md.getValue())) {
                             md.setValue(defaultValue);
                         }
@@ -352,11 +370,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         } else {
                             logical.addMetadata(md);
                         }
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);
                         metadataField.setMetadata(md);
+                        metadataField.setSearchSuffix(searchSuffix);
                         metadataFieldList.add(metadataField);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);
@@ -373,11 +392,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
                 for (Person p : personList) {
                     if (p.getType().getName().equals(name)) {
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);
                         metadataField.setPerson(p);
+                        metadataField.setSearchSuffix(searchSuffix);
                         found = true;
                         metadataFieldList.add(metadataField);
                     }
@@ -390,11 +410,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         } else {
                             logical.addPerson(person);
                         }
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);
                         metadataField.setPerson(person);
+                        metadataField.setSearchSuffix(searchSuffix);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);
                     }
@@ -585,6 +606,24 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void saveAllChanges() {
 
+        // TODO validate fields, display error in case field is invalid
+        //        int index = 0;
+        //        boolean valid = true;
+        //        for (MetadataField mf : metadataFieldList) {
+        //            String field = "field_" + index++;
+        //            if (StringUtils.isNotBlank(mf.getValidationRegex())) {
+        //                if (!mf.getValue().matches(mf.getValidationRegex())) {
+        //
+        //                    Helper.setFehlerMeldung(field, mf.getValidationErrorText(), mf.getValidationErrorText());
+        //                    valid = false;
+        //                }
+        //            }
+        //
+        //        }
+        //        if (!valid) {
+        //            return;
+        //        }
+
         // save properties
         for (MetadataField mf : metadataFieldList) {
             if (mf.getProperty() != null) {
@@ -645,8 +684,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     }
 
     public void searchForMetadata() {
-
-        Map<Integer, String> foundProcessIds = getAllProcessesWithMetadata(searchField, searchValue);
+        // TODO value to filter
+        Map<Integer, String> foundProcessIds = getAllProcessesWithMetadata("");
 
         processList = new ArrayList<>(foundProcessIds.size());
 
@@ -659,13 +698,17 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     // get process id and title of all processes with a given metadata
 
-    private static Map<Integer, String> getAllProcessesWithMetadata(String name, String value) {
-        String sql = "SELECT processid, titel FROM metadata left join prozesse on processid = prozesseid WHERE name = ? and value LIKE '%"
-                + StringEscapeUtils.escapeSql(value) + "%'";
+    private static Map<Integer, String> getAllProcessesWithMetadata(String filter) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT prozesse.prozesseID, prozesse.titel FROM prozesse use index (status) left join batches on prozesse.batchId = batches.id ");
+        sql.append("left join projekte on prozesse.ProjekteID = projekte.ProjekteID ");
+        sql.append("left join institution on projekte.institution_id = institution.id ");
+        sql.append(" WHERE " + filter);
+
         Connection connection = null;
         try {
             connection = MySQLHelper.getInstance().getConnection();
-            return new QueryRunner().query(connection, sql, resultSetToMapHandler, name);
+            return new QueryRunner().query(connection, sql.toString(), resultSetToMapHandler);
 
         } catch (SQLException e) {
             log.error(e);
@@ -687,7 +730,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             Map<Integer, String> answer = new HashMap<>();
             try {
                 while (rs.next()) {
-                    Integer processid = rs.getInt("processid");
+                    Integer processid = rs.getInt("prozesseID");
                     String processTitle = rs.getString("titel");
                     answer.put(processid, processTitle);
                 }
@@ -709,7 +752,73 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     }
 
     public boolean getProcessListIsEmpty() {
-        return processList== null || processList.isEmpty();
+        return processList == null || processList.isEmpty();
     }
 
+    public void seachField() {
+
+        StringBuilder searchQuery = new StringBuilder();
+
+        switch (currentField.getSource()) {
+            case "property":
+                // "processproperty:name:value"
+                searchQuery.append("\"processproperty:");
+                searchQuery.append(currentField.getName());
+                searchQuery.append(":");
+                searchQuery.append(currentField.getValue());
+                searchQuery.append("\" ");
+                break;
+            case "metadata":
+                // "meta:name:value"
+                searchQuery.append("\"meta:");
+                searchQuery.append(currentField.getName());
+                searchQuery.append(":");
+                searchQuery.append(currentField.getValue());
+                searchQuery.append("\" ");
+                break;
+            case "person":
+                // "meta:name:firstname lastname"
+                String personName = null;
+                if (StringUtils.isNotBlank(currentField.getPerson().getFirstname())
+                        && StringUtils.isNotBlank(currentField.getPerson().getLastname())) {
+                    personName = currentField.getPerson().getFirstname() + " " + currentField.getPerson().getLastname();
+                } else if (StringUtils.isNotBlank(currentField.getPerson().getFirstname())) {
+                    personName = currentField.getPerson().getFirstname();
+                } else {
+                    personName = currentField.getPerson().getLastname();
+                }
+                searchQuery.append("\"meta:");
+                searchQuery.append(currentField.getName());
+                searchQuery.append(":");
+                searchQuery.append(personName);
+                searchQuery.append("\" ");
+
+                break;
+        }
+        // addd configured suffix
+        String suffix = currentField.getSearchSuffix();
+        if (StringUtils.isNotBlank(suffix)) {
+            searchQuery.append(suffix);
+        }
+        // exclude current process id
+        //        searchQuery.append(" -id:").append(process.getId());
+
+        String sql = FilterHelper.criteriaBuilder(searchQuery.toString(), false, null, null, null, true, false);
+        sql = sql + " and prozesse.istTemplate = false ";
+        Map<Integer, String> foundProcessIds = getAllProcessesWithMetadata(sql);
+
+        processList = new ArrayList<>(foundProcessIds.size());
+
+        for (Integer id : foundProcessIds.keySet()) {
+            List<StringPair> metadataList = MetadataManager.getMetadata(id);
+            ProcessMetadata pm = new ProcessMetadata(id, foundProcessIds.get(id), metadataList, metadataWhiteListToImport, preselectFields);
+            processList.add(pm);
+        }
+
+        displaySearchPopup=true;
+    }
+
+    public void handleClose(CloseEvent event) {
+        displaySearchPopup=false;
+    }
 }

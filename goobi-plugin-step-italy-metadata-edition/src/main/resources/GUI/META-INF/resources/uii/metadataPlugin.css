@@ -193,7 +193,7 @@
 }
 
 .scrollable, .scroll {
-    max-height: 500px;
+    max-height: 400px;
     overflow-y: auto;
     overflow-x: hidden;
     width: auto;
