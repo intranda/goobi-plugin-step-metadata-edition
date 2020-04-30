@@ -586,6 +586,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
             }
         }
+        displaySearchPopup = false;
     }
 
     private void removeMetadata(String metadataType, DocStruct docstruct) {
