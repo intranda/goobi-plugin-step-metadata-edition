@@ -284,7 +284,7 @@
             draggable="true"
             modal="true"
             responsive="true"
-            width="600"
+            width="800"
             closable="true"
             closeOnEscape="true">
             <p:ajax
@@ -296,7 +296,9 @@
 
             <h:panelGroup rendered="#{AktuelleSchritteForm.myPlugin.displaySearchOption}">
                 <p>#{msgs.plugin_italy_metadata_edition_helpSearchForProcess}</p>
-                <div class="row" style="width:100%">
+                <div
+                    class="row"
+                    style="width: 100%">
                     <div class="col-sm-3 control-label">
                         <h:outputLabel
                             for="searchField"
@@ -326,84 +328,73 @@
                 </div>
             </h:panelGroup>
             <h:panelGroup id="resultList">
-                <!-- styleClass="scrollable"  style="border: 1px solid #333"-->
                 <h:panelGroup
                     styleClass="row"
-                    style="width:100%"
+                    style="border: 1px solid #666; margin-left: 0; margin-right: 0"
                     layout="block"
                     rendered="#{!AktuelleSchritteForm.myPlugin.processListIsEmpty}">
-
 
                     <ui:repeat
                         var="process"
                         value="#{AktuelleSchritteForm.myPlugin.processList}"
                         varStatus="processStatus">
-                        <hr />
-                        <div class="col-sm-11">
-                            <div
-                                class="form-group"
-                                style="border-top: 1px solid #ddd;">
-                                <h:outputLabel
-                                    for="processtitle"
-                                    styleClass="control-label col-sm-3"
-                                    value="#{msgs.titel}" />
-                                <div class="col-sm-9">
+                        <div
+                            class="form-group"
+                            style="border-top: 1px solid #ddd;">
+                            <h:outputLabel
+                                for="processtitle"
+                                styleClass="control-label col-sm-3"
+                                value="#{msgs.titel}" />
+                            <div class="col-sm-8">
+                                <x:outputText
+                                    id="processtitle"
+                                    style="border:0px;background: #f6f6f6;"
+                                    styleClass="form-control"
+                                    value="#{process.processTitle}" />
+                            </div>
+                            <div class="col-sm-1">
+                                <h:commandLink
+                                    styleClass="btn btn--icon-green"
+                                    action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}"
+                                    title="#{msgs.plugin_italy_metadata_edition_importSelectedMetadata}">
+                                    <i class="fa fa-check" />
+
+                                    <f:setPropertyActionListener
+                                        value="#{process}"
+                                        target="#{AktuelleSchritteForm.myPlugin.selectedProcess}" />
+                                </h:commandLink>
+                            </div>
+                        </div>
+
+                        <ui:repeat
+                            var="metadata"
+                            value="#{process.metadataFieldList}">
+                            <div class="form-group">
+                                <div class="col-sm-3 control-label">
+                                    <h:outputLabel
+                                        for="md"
+                                        value="#{metadata.label}" />
+                                </div>
+                                <div class="col-sm-8">
                                     <x:outputText
-                                        id="processtitle"
-                                        style="border:0px;background: #f6f6f6;"
+                                        id="md"
                                         styleClass="form-control"
-                                        value="#{process.processTitle}" />
+                                        value="#{metadata.value}" />
+                                </div>
 
-
+                                <div class="col-sm-1">
+                                    <h:selectBooleanCheckbox
+                                        value="#{metadata.selected}"
+                                        disabled="#{!metadata.whitelisted}" />
                                 </div>
                             </div>
 
-                            <ui:repeat
-                                var="metadata"
-                                value="#{process.metadataFieldList}">
-                                <div class="form-group">
-                                    <div class="col-sm-3 control-label">
-                                        <h:outputLabel
-                                            for="md"
-                                            value="#{metadata.label}" />
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <x:outputText
-                                            id="md"
-                                            styleClass="form-control"
-                                            value="#{metadata.value}" />
-                                    </div>
-
-                                    <div class="col-sm-1">
-                                        <h:selectBooleanCheckbox
-                                            value="#{metadata.selected}"
-                                            disabled="#{!metadata.whitelisted}" />
-
-                                    </div>
-                                </div>
-
-                            </ui:repeat>
-                        </div>
-
-                        <div class="col-sm-1">
-
-                            <h:commandLink
-                                styleClass="btn btn--icon-green"
-                                action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}"
-                                title="#{msgs.plugin_italy_metadata_edition_importSelectedMetadata}">
-                                <i class="fa fa-check" />
-
-                                <f:setPropertyActionListener
-                                    value="#{process}"
-                                    target="#{AktuelleSchritteForm.myPlugin.selectedProcess}" />
-                            </h:commandLink>
-                        </div>
+                        </ui:repeat>
+                        <hr />
                     </ui:repeat>
+
                 </h:panelGroup>
             </h:panelGroup>
-
-
-
         </p:dialog>
 
         <script type="text/javascript">
