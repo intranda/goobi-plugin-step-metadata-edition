@@ -10,7 +10,7 @@
 
     <link
         rel="stylesheet"
-        href="metadataPlugin.css" />
+        href="intranda_step_metadata_edition.css" />
 
     <style>
 .goobi-thumbnail {
@@ -37,7 +37,7 @@
             <div class="box-title">
                 <h3>
                     <i class="fa fa-puzzle-piece"></i>
-                    <h:outputText value="#{msgs.plugin_italy_metadata_edition_imageSelection}" />
+                    <h:outputText value="#{msgs.intranda_step_metadata_edition_imageSelection}" />
                 </h3>
                 <div class="actions">
                     <h:commandLink
@@ -111,7 +111,7 @@
             <div class="box-title">
                 <h3>
                     <i class="fa fa-puzzle-piece"></i>
-                    <h:outputText value="#{msgs.plugin_italy_metadata_edition_properties}" />
+                    <h:outputText value="#{msgs.intranda_step_metadata_edition_properties}" />
                 </h3>
                 <div class="actions">
                     <h:commandLink
@@ -251,11 +251,11 @@
 
                     <h:commandLink
                         styleClass="btn btn-primary font-size-s margin-bottom-most"
-                        title="#{msgs.plugin_italy_metadata_edition_searchForProcess}"
+                        title="#{msgs.intranda_step_metadata_edition_searchForProcess}"
                         action="#{AktuelleSchritteForm.myPlugin.openPopup}">
 
                         <i class="fa fa-search margin-right-5"></i>
-                        <h:outputText value="#{msgs.plugin_italy_metadata_edition_searchForProcess}" />
+                        <h:outputText value="#{msgs.intranda_step_metadata_edition_searchForProcess}" />
 
                     </h:commandLink>
 
@@ -277,7 +277,7 @@
         <p:dialog
             id="dialogue"
             rendered="#{AktuelleSchritteForm.myPlugin.displaySearchPopup}"
-            header="#{msgs.plugin_italy_metadata_edition_searchForProcess}"
+            header="#{msgs.intranda_step_metadata_edition_searchForProcess}"
             widgetVar="dlg1"
             minHeight="40"
             height="480"
@@ -292,17 +292,15 @@
                 listener="#{AktuelleSchritteForm.myPlugin.handleClose}"
                 update="dialogue" />
 
-
-
             <h:panelGroup rendered="#{AktuelleSchritteForm.myPlugin.displaySearchOption}">
-                <p>#{msgs.plugin_italy_metadata_edition_helpSearchForProcess}</p>
+                <p>#{msgs.intranda_step_metadata_edition_helpSearchForProcess}</p>
                 <div
                     class="row"
                     style="width: 100%">
                     <div class="col-sm-3 control-label">
                         <h:outputLabel
                             for="searchField"
-                            value="#{msgs.plugin_italy_metadata_edition_searchForProcess}" />
+                            value="#{msgs.intranda_step_metadata_edition_searchForProcess}" />
                     </div>
                     <div class="col-sm-7">
                         <x:inputText
@@ -356,7 +354,7 @@
                                 <h:commandLink
                                     styleClass="btn btn--icon-green"
                                     action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}"
-                                    title="#{msgs.plugin_italy_metadata_edition_importSelectedMetadata}">
+                                    title="#{msgs.intranda_step_metadata_edition_importSelectedMetadata}">
                                     <i class="fa fa-check" />
 
                                     <f:setPropertyActionListener
@@ -398,53 +396,52 @@
         </p:dialog>
 
         <script type="text/javascript">
-                                                                    window.onload = function() {
-                                                                        loadImages();
-                                                                    }
-
-                                                                    function loadThumbnails() {
-                                                                        var height = parseInt( '#{AktuelleSchritteForm.myPlugin.thumbnailSize}' );
-                                                                        if ( height ) {
-                                                                            $( '.goobi-thumbnail-image' ).css( 'height', ( height + 25 ) + 'px' );
-                                                                            $( '.goobi-thumbnail-image .thumb' ).css( 'max-height', height + 'px' );
-                                                                            $( '.goobi-thumbnail-image .thumb canvas' ).css( 'max-height', height + 'px' );
-                                                                            $( '.goobi-thumbnail-image' ).css( 'max-width', ( height ) + 'px' );
-                                                                        }
-                                                                    }
-
-                                                                    function updateSelectedThumbnail(element) {
-                                                                     
-                                                                        var galleryLinks = document.getElementsByClassName('goobi-thumbnail img-active');
-                                                                        console.log(galleryLinks);
-                                                                        for (var i = 0; i &lt; galleryLinks.length; i++) {
-                                                                            galleryLinks[i].className = "goobi-thumbnail font-light";            
-                                                                        }
-                                                                        element.parentElement.parentElement.parentElement.className = "goobi-thumbnail img-active";
-                                                                        return true;
-                                                                    }
-                                                                    
-                                                                    $( document ).ready( function() {
-                                                                        var displayPopup = '#{AktuelleSchritteForm.myPlugin.displaySearchPopup}';
-                                                                        if ( displayPopup == 'true' ) {
-                                                                            PF( 'dlg1' ).show();
-                                                                        }
-                                                                        
-                                                                        loadThumbnails();
-                                                                    } );
-                                                                    
-                                                                    jsf.ajax.addOnEvent( function( data ) {
-                                                                        var ajaxstatus = data.status; // Can be "begin", "complete" and "success"
-                                                                        switch ( ajaxstatus ) {
-                                                                            case "success": // This is called when ajax response is successfully processed.
-                                                                                loadThumbnails();
-                                                                                break;
-                                                                        }
-                                                                    } );
-                                                                    
-                                                                  
-                                                                    
-                                                                </script>
+	        window.onload = function() {
+	            loadImages();
+	        }
+	
+	        function loadThumbnails() {
+	            var height = parseInt( '#{AktuelleSchritteForm.myPlugin.thumbnailSize}' );
+	            if ( height ) {
+	                $( '.goobi-thumbnail-image' ).css( 'height', ( height + 25 ) + 'px' );
+	                $( '.goobi-thumbnail-image .thumb' ).css( 'max-height', height + 'px' );
+	                $( '.goobi-thumbnail-image .thumb canvas' ).css( 'max-height', height + 'px' );
+	                $( '.goobi-thumbnail-image' ).css( 'max-width', ( height ) + 'px' );
+	            }
+	        }
+	
+	        function updateSelectedThumbnail(element) {
+	         
+	            var galleryLinks = document.getElementsByClassName('goobi-thumbnail img-active');
+	            console.log(galleryLinks);
+	            for (var i = 0; i &lt; galleryLinks.length; i++) {
+	                galleryLinks[i].className = "goobi-thumbnail font-light";            
+	            }
+	            element.parentElement.parentElement.parentElement.className = "goobi-thumbnail img-active";
+	            return true;
+	        }
+	        
+	        $( document ).ready( function() {
+	            var displayPopup = '#{AktuelleSchritteForm.myPlugin.displaySearchPopup}';
+	            if ( displayPopup == 'true' ) {
+	                PF( 'dlg1' ).show();
+	            }
+	            
+	            loadThumbnails();
+	        } );
+	        
+	        jsf.ajax.addOnEvent( function( data ) {
+	            var ajaxstatus = data.status; // Can be "begin", "complete" and "success"
+	            switch ( ajaxstatus ) {
+	                case "success": // This is called when ajax response is successfully processed.
+	                    loadThumbnails();
+	                    break;
+	            }
+	        } );
+	        
+	      
+	        
+	    </script>
     </h:form>
-
 
 </ui:composition>
