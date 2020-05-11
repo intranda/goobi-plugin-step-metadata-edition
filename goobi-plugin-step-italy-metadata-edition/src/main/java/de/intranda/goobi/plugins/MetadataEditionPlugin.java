@@ -34,6 +34,7 @@ import org.primefaces.event.CloseEvent;
 
 import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
 import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.enums.PropertyType;
@@ -614,23 +615,20 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void saveAllChanges() {
 
-        // TODO validate fields, display error in case field is invalid
-        //        int index = 0;
-        //        boolean valid = true;
-        //        for (MetadataField mf : metadataFieldList) {
-        //            String field = "field_" + index++;
-        //            if (StringUtils.isNotBlank(mf.getValidationRegex())) {
-        //                if (!mf.getValue().matches(mf.getValidationRegex())) {
-        //
-        //                    Helper.setFehlerMeldung(field, mf.getValidationErrorText(), mf.getValidationErrorText());
-        //                    valid = false;
-        //                }
-        //            }
-        //
-        //        }
-        //        if (!valid) {
-        //            return;
-        //        }
+        boolean valid = true;
+        for (MetadataField mf : metadataFieldList) {
+            if (mf.getRequired().booleanValue() && StringUtils.isBlank(mf.getValue())) {
+                Helper.setFehlerMeldung(mf.getLabel() + ": " + Helper.getTranslation("valueIsRequired"), "");
+                valid = false;
+            } else if (StringUtils.isNotBlank(mf.getValidationRegex()) && !mf.getValue().matches(mf.getValidationRegex())) {
+                Helper.setFehlerMeldung(mf.getLabel() + ": " + mf.getValidationErrorText(), "");
+                valid = false;
+            }
+        }
+
+        if (!valid) {
+            return;
+        }
 
         // save properties
         for (MetadataField mf : metadataFieldList) {

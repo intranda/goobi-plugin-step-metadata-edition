@@ -30,7 +30,8 @@
 
     <h:form
         styleClass="form-horizontal form-bordered"
-        prependId="false">
+        prependId="false"
+        id="metadataForm">
 
         <div class="box box-color lightgrey box-bordered">
 
@@ -132,6 +133,7 @@
             <div class="box-content nopadding">
 
                 <ui:repeat
+                
                     value="#{AktuelleSchritteForm.myPlugin.metadataFieldList}"
                     var="field"
                     varStatus="status"
@@ -177,7 +179,9 @@
                                 <x:inputText
                                     styleClass="form-control"
                                     value="#{field.value}"
-                                    required="#{field.required}">
+                                    required="false"
+                                    id="field_#{status.index}"
+                                    >
                                     <f:ajax
                                         execute="@this"
                                         render="@this"
@@ -229,7 +233,7 @@
                                     label="#{msgs.vorname}"
                                     field="#{field.person.firstname}"
                                     fieldStyle="form-control"
-                                    required="#{field.required}"
+                                    required="false"
                                     execute="@this"
                                     render="@this" />
 
@@ -238,11 +242,12 @@
                                     label="#{msgs.nachname}"
                                     field="#{field.person.lastname}"
                                     fieldStyle="form-control"
-                                    required="#{field.required}"
+                                    required="false"
                                     execute="@this"
                                     render="@this" />
 
                             </ui:fragment>
+                            <h:message for="field_#{status.index}" showDetail="true" styleClass="help-inline font-danger"/>
                         </div>
                     </div>
                 </ui:repeat>
