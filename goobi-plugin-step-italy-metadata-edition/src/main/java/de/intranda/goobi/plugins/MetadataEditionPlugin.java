@@ -181,12 +181,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         process = step.getProzess();
 
-        try {
-            imageFolderName = process.getImagesTifDirectory(true);
-        } catch (IOException | InterruptedException | SwapException | DAOException e3) {
-            log.error(e3);
-        }
-
         prefs = process.getRegelsatz().getPreferences();
         try {
             fileformat = process.readMetadataFile();
@@ -251,7 +245,15 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             }
         }
         thumbnailSize = myconfig.getInt("thumbnailsize", 200);
-
+        try {
+            if ("master".equalsIgnoreCase(myconfig.getString("imageFolder", null))) {
+                imageFolderName = process.getImagesOrigDirectory(true);
+            } else {
+                imageFolderName = process.getImagesTifDirectory(true);
+            }
+        } catch (IOException | InterruptedException | SwapException | DAOException e3) {
+            log.error(e3);
+        }
         initDisplayFields(myconfig);
 
         initSearchFields(myconfig);
@@ -345,23 +347,23 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 } else {
                     metadataList = logical.getAllMetadata();
                 }
-                
-                if (metadataList!=null) {
-                	for (Metadata md : metadataList) {
-	                    if (md.getType().getName().equals(name)) {
-	                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
-	                        metadataField.setValidationRegex(validationRegex);
-	                        metadataField.setValidationErrorText(validationErrorText);
-	                        metadataField.setValueList(valueList);
-	                        metadataField.setMetadata(md);
-	                        metadataField.setSearchSuffix(searchSuffix);
-	                        if (StringUtils.isBlank(md.getValue())) {
-	                            md.setValue(defaultValue);
-	                        }
-	                        found = true;
-	                        metadataFieldList.add(metadataField);
-	                    }
-	                }
+
+                if (metadataList != null) {
+                    for (Metadata md : metadataList) {
+                        if (md.getType().getName().equals(name)) {
+                            MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                            metadataField.setValidationRegex(validationRegex);
+                            metadataField.setValidationErrorText(validationErrorText);
+                            metadataField.setValueList(valueList);
+                            metadataField.setMetadata(md);
+                            metadataField.setSearchSuffix(searchSuffix);
+                            if (StringUtils.isBlank(md.getValue())) {
+                                md.setValue(defaultValue);
+                            }
+                            found = true;
+                            metadataFieldList.add(metadataField);
+                        }
+                    }
                 }
                 if (!found) {
                     try {
@@ -392,20 +394,20 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 } else {
                     personList = logical.getAllPersons();
                 }
-                
-                if (personList!=null) {
+
+                if (personList != null) {
                     for (Person p : personList) {
-	                    if (p.getType().getName().equals(name)) {
-	                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
-	                        metadataField.setValidationRegex(validationRegex);
-	                        metadataField.setValidationErrorText(validationErrorText);
-	                        metadataField.setValueList(valueList);
-	                        metadataField.setPerson(p);
-	                        metadataField.setSearchSuffix(searchSuffix);
-	                        found = true;
-	                        metadataFieldList.add(metadataField);
-	                    }
-	                }
+                        if (p.getType().getName().equals(name)) {
+                            MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                            metadataField.setValidationRegex(validationRegex);
+                            metadataField.setValidationErrorText(validationErrorText);
+                            metadataField.setValueList(valueList);
+                            metadataField.setPerson(p);
+                            metadataField.setSearchSuffix(searchSuffix);
+                            found = true;
+                            metadataFieldList.add(metadataField);
+                        }
+                    }
                 }
                 if (!found) {
                     try {
@@ -822,17 +824,16 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             processList.add(pm);
         }
         displaySearchOption = false;
-        displaySearchPopup=true;
+        displaySearchPopup = true;
     }
 
     public void handleClose(CloseEvent event) {
-        displaySearchPopup=false;
+        displaySearchPopup = false;
     }
 
-
-    public void openPopup ( ) {
-        processList=null;
+    public void openPopup() {
+        processList = null;
         displaySearchOption = true;
-        displaySearchPopup=true;
+        displaySearchPopup = true;
     }
 }
