@@ -31,6 +31,9 @@
         <!-- size of the thumbnail images -->
         <thumbnailsize>200</thumbnailsize>
 
+        <!-- which image folder should be used? Possible values are master/media, default is media -->
+        <imageFolder>media</imageFolder>
+
         <displayfield source="property" name="Template" type="text" required="false">
             <defaultValue></defaultValue>
         </displayfield>
