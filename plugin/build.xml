@@ -1,4 +1,4 @@
-<project name="goobi-plugin-step-metscreation" default="devbuild">
+<project name="goobi-plugin-step-metadata-edition" default="devbuild">
 	<target name="devbuild">
 		<exec executable="mvn">
 			<arg value="package"/>

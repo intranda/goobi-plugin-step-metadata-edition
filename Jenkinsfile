@@ -20,7 +20,7 @@ pipeline {
 
     stage('build') {
       steps {
-        sh 'mvn -f goobi-plugin-step-italy-metadata-edition/pom.xml install'
+        sh 'mvn -f plugin/pom.xml install'
         recordIssues enabledForFailure: true, aggregatingResults: true, tools: [java(), javaDoc()]
       }
     }

@@ -5,7 +5,7 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
     <properties>
-        <goobi.pluginversion>0.0.1-SNAPSHOT</goobi.pluginversion>
+        <goobi.pluginversion>1.0.0</goobi.pluginversion>
         <jar.name>plugin_intranda_step_metadata-edition</jar.name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -24,12 +24,12 @@
             <url>https://nexus.intranda.com/repository/maven-public</url>
         </repository>
     </repositories>
-    
+
     <modules>
         <module>module-gui</module>
         <module>module-main</module>
     </modules>
-    
+
     <dependencies>
     <dependency>
             <groupId>de.intranda.ugh</groupId>
@@ -58,7 +58,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-    
+
         <dependency>
             <groupId>de.intranda.goobi.workflow</groupId>
             <artifactId>goobi-core-jar</artifactId>
