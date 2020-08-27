@@ -33,6 +33,10 @@ public class MetadataField {
     // mandatory or optional
     @NonNull
     private Boolean required;
+    
+    // text to show as help text
+    @NonNull
+    private String helpText;
 
     // define if the field is taken from anchor or child element, relevant for multipart volumes, periodca, can be 'anchor' or 'child'
     private String structType = "child";
@@ -50,7 +54,7 @@ public class MetadataField {
 
     // text to display on validation errors
     private String validationErrorText;
-
+    
     // list of possible values for type="list"
     private List<String> valueList;
 

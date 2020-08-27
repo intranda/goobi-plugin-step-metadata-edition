@@ -221,30 +221,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             }
         }
 
-        String projectName = step.getProzess().getProjekt().getTitel();
-
-        XMLConfiguration xmlConfig = ConfigPlugins.getPluginConfig(getTitle());
-        xmlConfig.setExpressionEngine(new XPathExpressionEngine());
-        xmlConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-
-        // order of configuration is:
-        // 1.) project name and step name matches
-        // 2.) step name matches and project is *
-        // 3.) project name matches and step name is *
-        // 4.) project name and step name are *
-        try {
-            myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '" + step.getTitel() + "']");
-        } catch (IllegalArgumentException e) {
-            try {
-                myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '" + step.getTitel() + "']");
-            } catch (IllegalArgumentException e1) {
-                try {
-                    myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '*']");
-                } catch (IllegalArgumentException e2) {
-                    myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '*']");
-                }
-            }
-        }
+        // read parameters from correct block in configuration file
+        SubnodeConfiguration myconfig = ConfigPlugins.getProjectAndStepConfig(title, step);
         thumbnailSize = myconfig.getInt("thumbnailsize", 200);
         try {
             if ("master".equalsIgnoreCase(myconfig.getString("imageFolder", null))) {
@@ -256,9 +234,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             log.error(e3);
         }
         initDisplayFields(myconfig);
-
         initSearchFields(myconfig);
-
         initImageList();
     }
 
@@ -294,6 +270,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             String label = field.getString("@label", name);
             boolean required = field.getBoolean("@required", false);
             String structType = field.getString("@structType", "child");
+            String helpText = field.getString("@helpText", "No help text defined.");
 
             boolean searchable = field.getBoolean("@searchable", false);
             String searchSuffix = field.getString("@suffix");
@@ -310,7 +287,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             if ("property".contains(source)) {
                 for (Processproperty prop : properties) {
                     if (prop.getTitel().equals(name)) {
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);
@@ -333,7 +310,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     property.setType(PropertyType.String);
                     property.setWert(defaultValue);
                     process.getEigenschaften().add(property);
-                    MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                    MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
                     metadataField.setValidationRegex(validationRegex);
                     metadataField.setValidationErrorText(validationErrorText);
                     metadataField.setValueList(valueList);
@@ -352,7 +329,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 if (metadataList != null) {
                     for (Metadata md : metadataList) {
                         if (md.getType().getName().equals(name)) {
-                            MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                            MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
                             metadataField.setValidationRegex(validationRegex);
                             metadataField.setValidationErrorText(validationErrorText);
                             metadataField.setValueList(valueList);
@@ -375,7 +352,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         } else {
                             logical.addMetadata(md);
                         }
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);
@@ -399,7 +376,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 if (personList != null) {
                     for (Person p : personList) {
                         if (p.getType().getName().equals(name)) {
-                            MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                            MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
                             metadataField.setValidationRegex(validationRegex);
                             metadataField.setValidationErrorText(validationErrorText);
                             metadataField.setValueList(valueList);
@@ -418,7 +395,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         } else {
                             logical.addPerson(person);
                         }
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required, searchable);
+                        MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
                         metadataField.setValidationRegex(validationRegex);
                         metadataField.setValidationErrorText(validationErrorText);
                         metadataField.setValueList(valueList);

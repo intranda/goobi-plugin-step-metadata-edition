@@ -34,7 +34,7 @@
         <!-- which image folder should be used? Possible values are master/media, default is media -->
         <imageFolder>media</imageFolder>
 
-        <displayfield source="property" name="Template" type="text" required="false">
+        <displayfield source="property" name="Template" type="text" required="false" helpText="This is an explaining text to define what shall be entered into this field.">
             <defaultValue></defaultValue>
         </displayfield>
         <displayfield source="metadata" name="PublicationYear" type="text" required="true">

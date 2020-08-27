@@ -64,7 +64,7 @@
 
                     <!-- Thumbnail list -->
                     <div
-                        class="flex-container scrollable"
+                        class="flex-container"
                         dir="#{AktuelleSchritteForm.myPlugin.flowDir}">
 
                         <ui:repeat
@@ -185,6 +185,20 @@
                                         event="blur" />
                                 </x:inputText>
                             </ui:fragment>
+                            
+                            <ui:fragment rendered="#{field.type == 'textarea'}">
+                                <h:inputTextarea
+                                    styleClass="form-control"
+                                    value="#{field.value}"
+                                    required="false"
+                                    style="resize: vertical;min-height:7em;"
+                                    >
+                                    <f:ajax
+                                        execute="@this"
+                                        render="@this"
+                                        event="blur" />
+                                </h:inputTextarea>
+                            </ui:fragment>
 
                             <ui:fragment rendered="#{field.type == 'list'}">
                                 <h:selectOneMenu
@@ -208,7 +222,7 @@
                             <ui:fragment rendered="#{field.type == 'checkbox'}">
                                 <h:selectBooleanCheckbox
                                     styleClass="form-control checkbox-height-fix"
-                                    style="margin-left: 0px;"
+                                    style="width: auto;"
                                     value="#{field.value}">
                                     <f:ajax
                                         event="change"
@@ -245,6 +259,7 @@
 
                             </ui:fragment>
                             <h:message for="field_#{status.index}" showDetail="true" styleClass="help-inline font-danger"/>
+                        	<h:outputText styleClass="help-block font-light" rendered="#{NavigationForm.showHelp}" value="#{field.helpText}" />
                         </div>
                     </div>
                 </ui:repeat>
