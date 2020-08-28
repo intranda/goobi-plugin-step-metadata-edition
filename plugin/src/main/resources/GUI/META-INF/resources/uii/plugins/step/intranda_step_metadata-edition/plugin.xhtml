@@ -366,27 +366,25 @@
             </h:panelGroup>
             <h:panelGroup id="resultList">
                 <h:panelGroup
-                    styleClass="row"
-                    style="border: 1px solid #666; margin-left: 0; margin-right: 0"
                     layout="block"
                     rendered="#{!AktuelleSchritteForm.myPlugin.processListIsEmpty}">
-
+					
                     <ui:repeat
                         var="process"
                         value="#{AktuelleSchritteForm.myPlugin.processList}"
                         varStatus="processStatus">
                         <div
-                            class="form-group"
-                            style="border-top: 1px solid #ddd;">
+                            class="row"
+                            >
                             <h:outputLabel
                                 for="processtitle"
-                                styleClass="control-label col-sm-3"
+                                styleClass="col-sm-3"
                                 value="#{msgs.prozessTitel}" />
                             <div class="col-sm-8">
                                 <x:outputText
                                     id="processtitle"
-                                    style="border:0px;"
-                                    styleClass="form-control"
+                                    style=""
+                                    styleClass=""
                                     value="#{process.processTitle}" />
                             </div>
                             <div class="col-sm-1">
@@ -402,12 +400,12 @@
                                 </h:commandLink>
                             </div>
                         </div>
-
                         <ui:repeat
                             var="metadata"
                             value="#{process.metadataFieldList}">
-                            <div class="form-group">
-                                <div class="col-sm-3 control-label">
+                            <div class="row">
+								<hr style="margin-top: 10px;margin-bottom: 10px;border-top: 1px #eee solid;"/>
+                                <div class="col-sm-3">
                                     <h:outputLabel
                                         for="md"
                                         value="#{metadata.label}" />
@@ -415,7 +413,7 @@
                                 <div class="col-sm-8">
                                     <x:outputText
                                         id="md"
-                                        styleClass="form-control"
+                                        styleClass=""
                                         value="#{metadata.value}" />
                                 </div>
 
@@ -426,9 +424,8 @@
                                         disabled="#{!metadata.whitelisted}" />
                                 </div>
                             </div>
-
                         </ui:repeat>
-                        <hr />
+						<hr style="margin-top: 20px;margin-bottom: 20px;border-top: 1px #666 solid;"/>
                     </ui:repeat>
 
                 </h:panelGroup>
