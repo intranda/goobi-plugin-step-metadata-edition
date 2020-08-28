@@ -139,8 +139,10 @@
                     varStatus="status"
                     rendered="#{!AktuelleSchritteForm.myPlugin.collapsedProperties}">
 
-
-                    <div class="form-group">
+					<ui:fragment rendered="#{(!AktuelleSchritteForm.myPlugin.hideEmptyFields or 
+						(field.type == 'textReadonly' or field.type == 'textareaReadonly') and (field.value ne '' and field.value ne null))
+						or (field.type ne 'textReadonly' and field.type ne 'textareaReadonly')}">
+					<div class="form-group">
                         <div class="col-sm-3 control-label">
 
                             <h:outputLabel
@@ -200,6 +202,27 @@
                                 </h:inputTextarea>
                             </ui:fragment>
 
+							<ui:fragment rendered="#{field.type == 'textReadonly'}">
+                                <x:inputText
+                                    styleClass="form-control"
+                                    value="#{field.value}"
+                                    required="false"
+                                    readonly="true"
+                                    >
+                                </x:inputText>
+                            </ui:fragment>
+                            
+                            <ui:fragment rendered="#{field.type == 'textareaReadonly'}">
+                                <h:inputTextarea
+                                    styleClass="form-control"
+                                    value="#{field.value}"
+                                    required="false"
+                                    readonly="true"
+                                    style="resize: vertical;min-height:7em;"
+                                    >
+                                </h:inputTextarea>
+                            </ui:fragment>
+                            
                             <ui:fragment rendered="#{field.type == 'list'}">
                                 <h:selectOneMenu
                                     styleClass="form-control"
@@ -262,6 +285,7 @@
                         	<h:outputText styleClass="help-block font-light" rendered="#{NavigationForm.showHelp}" value="#{field.helpText}" />
                         </div>
                     </div>
+                    </ui:fragment>
                 </ui:repeat>
 
                 <div class="form-actions">
@@ -357,20 +381,20 @@
                             <h:outputLabel
                                 for="processtitle"
                                 styleClass="control-label col-sm-3"
-                                value="#{msgs.titel}" />
+                                value="#{msgs.prozessTitel}" />
                             <div class="col-sm-8">
                                 <x:outputText
                                     id="processtitle"
-                                    style="border:0px;background: #f6f6f6;"
+                                    style="border:0px;"
                                     styleClass="form-control"
                                     value="#{process.processTitle}" />
                             </div>
                             <div class="col-sm-1">
                                 <h:commandLink
-                                    styleClass="btn btn--icon-green"
+                                    styleClass="btn btn-small btn--icon-green"
                                     action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}"
                                     title="#{msgs.intranda_step_metadata_edition_importSelectedMetadata}">
-                                    <i class="fa fa-check" />
+                                    <i class="fa fa-check" style="color:#fff" />
 
                                     <f:setPropertyActionListener
                                         value="#{process}"
@@ -397,6 +421,7 @@
 
                                 <div class="col-sm-1">
                                     <h:selectBooleanCheckbox
+                                    	style="margin-top:5px; margin-bottom:7px;"
                                         value="#{metadata.selected}"
                                         disabled="#{!metadata.whitelisted}" />
                                 </div>

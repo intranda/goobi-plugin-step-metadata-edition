@@ -104,6 +104,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     @Getter
     private int thumbnailSize = 200;
+    
+    @Getter
+    private boolean hideEmptyFields = true;
 
     private boolean pagesRTL;
     @Getter
@@ -222,8 +225,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         }
 
         // read parameters from correct block in configuration file
-        SubnodeConfiguration myconfig = ConfigPlugins.getProjectAndStepConfig(title, step);
+        myconfig = ConfigPlugins.getProjectAndStepConfig(title, step);
         thumbnailSize = myconfig.getInt("thumbnailsize", 200);
+        hideEmptyFields = myconfig.getBoolean("hideEmptyFields", true);
         try {
             if ("master".equalsIgnoreCase(myconfig.getString("imageFolder", null))) {
                 imageFolderName = process.getImagesOrigDirectory(true);

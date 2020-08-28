@@ -30,6 +30,9 @@
         <step>*</step>
         <!-- size of the thumbnail images -->
         <thumbnailsize>200</thumbnailsize>
+        
+        <!-- define if you want to see empty fields for read only values -->
+        <hideEmptyFields>true</hideEmptyFields>
 
         <!-- which image folder should be used? Possible values are master/media, default is media -->
         <imageFolder>media</imageFolder>
