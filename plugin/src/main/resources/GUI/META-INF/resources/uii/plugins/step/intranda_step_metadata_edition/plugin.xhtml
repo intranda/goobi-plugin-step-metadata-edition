@@ -365,6 +365,10 @@
                 </div>
             </h:panelGroup>
             <h:panelGroup id="resultList">
+            
+            	<x:outputText id="noHitsFound" styleClass="alert alert-warning block text-center margin-top-regular"
+                	value="#{msgs.NORM_noHits}" rendered="#{AktuelleSchritteForm.myPlugin.processListIsEmpty}"/>
+                                    
                 <h:panelGroup
                     layout="block"
                     rendered="#{!AktuelleSchritteForm.myPlugin.processListIsEmpty}">

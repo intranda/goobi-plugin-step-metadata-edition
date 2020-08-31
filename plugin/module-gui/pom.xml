@@ -5,7 +5,7 @@
 	<artifactId>metadata-edition-gui</artifactId>
 	<version>1.0.0</version>
 	<properties>
-		<jar.name>plugin_intranda_step_metadata-edition-GUI</jar.name>
+		<jar.name>plugin_intranda_step_metadata_edition-GUI</jar.name>
 		<dest.folder>/opt/digiverso/goobi/plugins/GUI/</dest.folder>
 	</properties>
 	<parent>

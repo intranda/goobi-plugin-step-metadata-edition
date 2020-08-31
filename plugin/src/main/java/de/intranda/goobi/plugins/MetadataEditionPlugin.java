@@ -81,7 +81,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private String returnPath;
 
     @Getter
-    private String title = "intranda_step_metadata-edition";
+    private String title = "intranda_step_metadata_edition";
     @Getter
     private PluginType type = PluginType.Step;
 
