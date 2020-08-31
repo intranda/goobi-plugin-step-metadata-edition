@@ -160,7 +160,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     @Override
     public String cancel() {
-        return returnPath;
+        return "/uii" + this.returnPath;
     }
 
     @Override
