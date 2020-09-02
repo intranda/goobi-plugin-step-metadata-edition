@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
-import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang.StringUtils;
@@ -30,6 +27,9 @@ import org.goobi.production.enums.PluginType;
 import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.flow.statistics.hibernate.FilterHelper;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
+import org.goobi.vocabulary.Field;
+import org.goobi.vocabulary.VocabRecord;
+import org.goobi.vocabulary.Vocabulary;
 import org.primefaces.event.CloseEvent;
 
 import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
@@ -45,6 +45,7 @@ import de.sub.goobi.persistence.managers.MetadataManager;
 import de.sub.goobi.persistence.managers.MySQLHelper;
 import de.sub.goobi.persistence.managers.ProcessManager;
 import de.sub.goobi.persistence.managers.PropertyManager;
+import de.sub.goobi.persistence.managers.VocabularyManager;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -104,7 +105,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     @Getter
     private int thumbnailSize = 200;
-    
+
     @Getter
     private boolean hideEmptyFields = true;
 
@@ -286,6 +287,52 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             String validationErrorText = field.getString("/validationErrorText", "Value ist invalid");
             @SuppressWarnings("unchecked")
             List<String> valueList = field.getList("/value", null);
+
+            if (type.equals("vocabularyList")) {
+                String vocabularyName = field.getString("/vocabularyName");
+                List<String> fields = field.getList("/searchParameter", null);
+
+                if (fields == null) {
+                    Vocabulary currentVocabulary = VocabularyManager.getVocabularyByTitle(vocabularyName);
+                    if (currentVocabulary != null) {
+                        VocabularyManager.loadRecordsForVocabulary(currentVocabulary);
+                        valueList = new ArrayList<>(currentVocabulary.getRecords().size());
+                        if (currentVocabulary != null && currentVocabulary.getId() != null) {
+                            for (VocabRecord vr : currentVocabulary.getRecords()) {
+                                for (Field f : vr.getFields()) {
+                                    if (f.getDefinition().isMainEntry()) {
+                                        valueList.add(f.getValue());
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    List<StringPair> vocabularySearchFields = new ArrayList<>();
+                    for (String fieldname : fields) {
+                        String[] parts = fieldname.trim().split("=");
+                        if (parts.length > 1) {
+                            String fieldName = parts[0];
+                            String value = parts[1];
+                            StringPair sp = new StringPair(fieldName, value);
+                            vocabularySearchFields.add(sp);
+                        }
+                    }
+                    List<VocabRecord> records = VocabularyManager.findRecords(vocabularyName, vocabularySearchFields);
+                    if (records != null && records.size() > 0) {
+                        valueList = new ArrayList<>(records.size());
+                        for (VocabRecord vr : records) {
+                            for (Field f : vr.getFields()) {
+                                if (f.getDefinition().isMainEntry()) {
+                                    valueList.add(f.getValue());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             boolean found = false;
             if ("property".contains(source)) {

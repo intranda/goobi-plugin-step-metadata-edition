@@ -223,7 +223,7 @@
                                 </h:inputTextarea>
                             </ui:fragment>
                             
-                            <ui:fragment rendered="#{field.type == 'list'}">
+                            <ui:fragment rendered="#{field.type == 'list' or field.type == 'vocabularyList'}">
                                 <h:selectOneMenu
                                     styleClass="form-control"
                                     value="#{field.value}">

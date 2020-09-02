@@ -54,6 +54,13 @@
             <defaultValue>false</defaultValue>
         </displayfield>
 
+        <displayfield source="metadata" name="PlaceOfPublication" type="vocabularyList" label="Place">
+            <!-- name of the vocabulary, required -->
+            <vocabularyName>Subject terms</vocabularyName>
+            <!-- search parameter, optional, repeatable -->
+            <searchParameter>type=AccessLocations</searchParameter>            
+        </displayfield>
+
         <displayfield source="person" name="Author" type="multivalue" searchable="true" />
         <displayfield source="metadata" name="TitleDocMain" type="text" required="false" label="Haupttitel" searchable="true" suffix=" steplocked:Validierung"/>
         <displayfield source="metadata" name="DocLanguage" type="text" required="false" label="Sprache"  searchable="true"/>
