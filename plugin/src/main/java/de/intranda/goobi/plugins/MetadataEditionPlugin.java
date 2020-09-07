@@ -13,6 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -34,6 +41,7 @@ import org.primefaces.event.CloseEvent;
 
 import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
 import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.FacesContextHelper;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.StorageProvider;
@@ -287,21 +295,25 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             String validationErrorText = field.getString("/validationErrorText", "Value ist invalid");
             @SuppressWarnings("unchecked")
             List<String> valueList = field.getList("/value", null);
-
+            String vocabularyName = null;
+            String vocabularyUrl = null;
+            List<SelectItem> vocabularyRecords = null;
             if (type.equals("vocabularyList")) {
-                String vocabularyName = field.getString("/vocabularyName");
+                vocabularyName = field.getString("/vocabularyName");
+                @SuppressWarnings("unchecked")
                 List<String> fields = field.getList("/searchParameter", null);
 
                 if (fields == null) {
                     Vocabulary currentVocabulary = VocabularyManager.getVocabularyByTitle(vocabularyName);
+                    vocabularyUrl = getVocabularyBaseName() + currentVocabulary.getId() +"/";
                     if (currentVocabulary != null) {
                         VocabularyManager.loadRecordsForVocabulary(currentVocabulary);
-                        valueList = new ArrayList<>(currentVocabulary.getRecords().size());
+                        vocabularyRecords = new ArrayList<>(currentVocabulary.getRecords().size());
                         if (currentVocabulary != null && currentVocabulary.getId() != null) {
                             for (VocabRecord vr : currentVocabulary.getRecords()) {
                                 for (Field f : vr.getFields()) {
                                     if (f.getDefinition().isMainEntry()) {
-                                        valueList.add(f.getValue());
+                                        vocabularyRecords.add(new SelectItem(String.valueOf(vr.getId()), f.getValue()));
                                         break;
                                     }
                                 }
@@ -321,11 +333,16 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     }
                     List<VocabRecord> records = VocabularyManager.findRecords(vocabularyName, vocabularySearchFields);
                     if (records != null && records.size() > 0) {
-                        valueList = new ArrayList<>(records.size());
+                        vocabularyRecords = new ArrayList<>(records.size());
                         for (VocabRecord vr : records) {
+
+                            if (StringUtils.isBlank(vocabularyUrl)) {
+                                vocabularyUrl = getVocabularyBaseName() + vr.getVocabularyId();
+                            }
+
                             for (Field f : vr.getFields()) {
                                 if (f.getDefinition().isMainEntry()) {
-                                    valueList.add(f.getValue());
+                                    vocabularyRecords.add(new SelectItem(String.valueOf(vr.getId()), f.getValue()));
                                     break;
                                 }
                             }
@@ -344,6 +361,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         metadataField.setValueList(valueList);
                         metadataField.setProperty(prop);
                         metadataField.setSearchSuffix(searchSuffix);
+                        metadataField.setVocabularyList(vocabularyRecords);
+                        metadataField.setVocabularyName(vocabularyName);
+                        metadataField.setVocabularyUrl(vocabularyUrl);
                         if (StringUtils.isBlank(prop.getWert())) {
                             prop.setWert(defaultValue);
                         }
@@ -367,6 +387,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     metadataField.setValueList(valueList);
                     metadataField.setProperty(property);
                     metadataField.setSearchSuffix(searchSuffix);
+                    metadataField.setVocabularyList(vocabularyRecords);
+                    metadataField.setVocabularyName(vocabularyName);
+                    metadataField.setVocabularyUrl(vocabularyUrl);
                     metadataFieldList.add(metadataField);
                 }
             } else if ("metadata".contains(source)) {
@@ -386,6 +409,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                             metadataField.setValueList(valueList);
                             metadataField.setMetadata(md);
                             metadataField.setSearchSuffix(searchSuffix);
+                            metadataField.setVocabularyList(vocabularyRecords);
+                            metadataField.setVocabularyName(vocabularyName);
+                            metadataField.setVocabularyUrl(vocabularyUrl);
                             if (StringUtils.isBlank(md.getValue())) {
                                 md.setValue(defaultValue);
                             }
@@ -409,6 +435,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         metadataField.setValueList(valueList);
                         metadataField.setMetadata(md);
                         metadataField.setSearchSuffix(searchSuffix);
+                        metadataField.setVocabularyList(vocabularyRecords);
+                        metadataField.setVocabularyName(vocabularyName);
+                        metadataField.setVocabularyUrl(vocabularyUrl);
                         metadataFieldList.add(metadataField);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);
@@ -433,6 +462,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                             metadataField.setValueList(valueList);
                             metadataField.setPerson(p);
                             metadataField.setSearchSuffix(searchSuffix);
+                            metadataField.setVocabularyList(vocabularyRecords);
+                            metadataField.setVocabularyName(vocabularyName);
+                            metadataField.setVocabularyUrl(vocabularyUrl);
                             found = true;
                             metadataFieldList.add(metadataField);
                         }
@@ -452,6 +484,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         metadataField.setValueList(valueList);
                         metadataField.setPerson(person);
                         metadataField.setSearchSuffix(searchSuffix);
+                        metadataField.setVocabularyList(vocabularyRecords);
+                        metadataField.setVocabularyName(vocabularyName);
+                        metadataField.setVocabularyUrl(vocabularyUrl);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);
                     }
@@ -862,4 +897,19 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         displaySearchOption = true;
         displaySearchPopup = true;
     }
+
+    private String getVocabularyBaseName() {
+        FacesContext context = FacesContextHelper.getCurrentFacesContext();
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+        String contextPath = request.getContextPath();
+        String scheme = request.getScheme(); // http
+        String serverName = request.getServerName(); // hostname.com
+        int serverPort = request.getServerPort(); // 80
+        String reqUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+        Client client = ClientBuilder.newClient();
+        WebTarget base = client.target(reqUrl);
+        WebTarget vocabularyBase = base.path("api").path("vocabulary");
+        return vocabularyBase.path("records").getUri().toString()+"/";
+    }
+
 }

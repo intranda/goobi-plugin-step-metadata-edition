@@ -223,7 +223,7 @@
                                 </h:inputTextarea>
                             </ui:fragment>
                             
-                            <ui:fragment rendered="#{field.type == 'list' or field.type == 'vocabularyList'}">
+                            <ui:fragment rendered="#{field.type == 'list'}">
                                 <h:selectOneMenu
                                     styleClass="form-control"
                                     value="#{field.value}">
@@ -236,6 +236,26 @@
                                         itemDisabled="true" />
                                     <f:selectItems
                                         value="#{field.valueList}"
+                                        var="item"
+                                        itemLabel="#{item}"
+                                        itemValue="#{item}" />
+                                </h:selectOneMenu>
+                            </ui:fragment>
+                            
+                            
+                            <ui:fragment rendered="#{field.type == 'vocabularyList'}">
+                                <h:selectOneMenu
+                                    styleClass="form-control"
+                                    value="#{field.vocabularyValue}">
+                                    <f:ajax
+                                        event="change"
+                                        render="@this" />
+                                    <f:selectItem
+                                        itemValue=""
+                                        itemLabel="#{msgs.bitteAuswaehlen}"
+                                        itemDisabled="true" />
+                                    <f:selectItems
+                                        value="#{field.vocabularyList}"
                                         var="item"
                                         itemLabel="#{item}"
                                         itemValue="#{item}" />

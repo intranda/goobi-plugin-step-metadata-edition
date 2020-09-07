@@ -2,6 +2,9 @@ package de.intranda.goobi.plugins;
 
 import java.util.List;
 
+import javax.faces.model.SelectItem;
+
+import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Processproperty;
 
 import lombok.Data;
@@ -62,6 +65,44 @@ public class MetadataField {
     private Boolean searchable;
 
     private String searchSuffix;
+
+    private String vocabularyName;
+    private String vocabularyUrl;
+    private List<SelectItem> vocabularyList;
+
+    public void setVocabularyValue(String value) {
+        if (StringUtils.isNotBlank(value)) {
+            for (SelectItem item : vocabularyList) {
+                if (value.equals(item.getValue())) {
+                    if (metadata != null) {
+                        metadata.setValue(item.getLabel());
+                        metadata.setAutorityFile(vocabularyName, vocabularyUrl,
+                                vocabularyUrl + "/" + value);
+                    } else if (property != null) {
+                        property.setWert(item.getLabel());
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    public String getVocabularyValue() {
+        String label = "";
+        if (metadata != null) {
+            label = metadata.getValue();
+        } else if (property != null) {
+            label = property.getWert();
+        }
+        if (StringUtils.isNotBlank(label)) {
+            for (SelectItem item : vocabularyList) {
+                if (label.equals(item.getLabel())) {
+                    return (String) item.getValue();
+                }
+            }
+        }
+        return null;
+    }
 
     public void setValue(String value) {
         if (metadata != null) {
