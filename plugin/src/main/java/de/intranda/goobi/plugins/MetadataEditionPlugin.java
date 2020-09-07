@@ -305,7 +305,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
                 if (fields == null) {
                     Vocabulary currentVocabulary = VocabularyManager.getVocabularyByTitle(vocabularyName);
-                    vocabularyUrl = getVocabularyBaseName() + currentVocabulary.getId() +"/";
+                    vocabularyUrl = getVocabularyBaseName() + currentVocabulary.getId();
                     if (currentVocabulary != null) {
                         VocabularyManager.loadRecordsForVocabulary(currentVocabulary);
                         vocabularyRecords = new ArrayList<>(currentVocabulary.getRecords().size());
