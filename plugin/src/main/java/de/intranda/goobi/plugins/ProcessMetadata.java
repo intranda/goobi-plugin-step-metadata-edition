@@ -29,22 +29,29 @@ public class ProcessMetadata {
             boolean preselectFields) {
         this.processId = processid;
         this.processTitle = processTitle;
-        for (StringPair metadata : metadataList) {
-            if (whitelistedFieldNames.containsKey(metadata.getOne())) {
-                WhiteListItem wli = whitelistedFieldNames.get(metadata.getOne());
 
-                ProcessMetadataField pmf = new ProcessMetadataField();
-                pmf.setMetadataName(metadata.getOne());
-                pmf.setValue(metadata.getTwo());
-                pmf.setLabel(wli.getLabel());
+        for (String metadataName : whitelistedFieldNames.keySet()) {
+            for (StringPair existingMetadataEntry : metadataList) {
+                if (existingMetadataEntry.getOne().equals(metadataName)) {
+                    WhiteListItem wli = whitelistedFieldNames.get(metadataName);
+                    ProcessMetadataField pmf = new ProcessMetadataField();
+                    pmf.setMetadataName(existingMetadataEntry.getOne());
+                    pmf.setValue(existingMetadataEntry.getTwo());
+                    pmf.setLabel(wli.getLabel());
 
-                pmf.setWhitelisted(wli.isSelectable());
-                if (preselectFields && pmf.isWhitelisted()) {
-                    pmf.setSelected(true);
+                    pmf.setWhitelisted(wli.isSelectable());
+                    if (preselectFields && pmf.isWhitelisted()) {
+                        pmf.setSelected(true);
+                    }
+                    metadataFieldList.add(pmf);
+
+                    break;
                 }
-                metadataFieldList.add(pmf);
             }
         }
+
+
+
 
     }
 

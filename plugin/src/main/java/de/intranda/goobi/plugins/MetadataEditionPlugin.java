@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -138,7 +139,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Setter
     private List<ProcessMetadata> processList;
 
-    private Map<String, WhiteListItem> metadataWhiteListToImport = new HashMap<>();
+    private Map<String, WhiteListItem> metadataWhiteListToImport = new LinkedHashMap<>();
     private boolean preselectFields;
 
     @Getter
