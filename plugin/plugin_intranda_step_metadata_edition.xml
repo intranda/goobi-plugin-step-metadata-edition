@@ -30,19 +30,35 @@
         <step>*</step>
         <!-- size of the thumbnail images -->
         <thumbnailsize>200</thumbnailsize>
-        
+
         <!-- define if you want to see empty fields for read only values -->
         <hideEmptyFields>true</hideEmptyFields>
 
         <!-- which image folder should be used? Possible values are master/media, default is media -->
         <imageFolder>media</imageFolder>
 
+        <!-- each displayfield defines what shall be shown in the user interface 
+                source: where shall the field get its content from, possible values are property, metadata, person
+                name: the internal name of the field to be shown
+                type: define how the field shall look like (text, checkbox, multivalue, list, checkbox)
+                required: define if the value must be filled out
+                helpText: an explaination text for the field content
+                validationRegex: a regular expression to validate the field content
+                validationErrorText: the message to be shown if the validation is not successful
+                label: a label to show to the users for the field
+                structType: the place where the metadata comes from for source metadata (e.g. anchor)
+                defaultValue: the value to fill as default
+                searchable: define if the content of this field shall be used to start a search for other processes with this value
+                suffix: a suffix that shall be added to the search query when the field content is searched
+                vocabularyName: name of the vocabulary to list records from (e.g. Subject terms)
+                searchParameter: optional repeatable parameter to restrict records from the vocabulary (e.g. type=AccessLocations)
+        -->
         <displayfield source="property" name="Template" type="text" required="false" helpText="This is an explaining text to define what shall be entered into this field.">
             <defaultValue></defaultValue>
         </displayfield>
         <displayfield source="metadata" name="PublicationYear" type="text" required="true">
-    	    <validationRegex>\d{4}</validationRegex>
-    	    <validationErrorText>Value must be a 4 digits year</validationErrorText>
+            <validationRegex>\d{4}</validationRegex>
+            <validationErrorText>Value must be a 4 digits year</validationErrorText>
         </displayfield>
         <displayfield source="metadata" name="singleDigCollection" type="list" required="true" label="Collection" structType="anchor">
             <defaultValue>Collection A</defaultValue>
@@ -53,22 +69,24 @@
         <displayfield source="metadata" name="_directionRTL" type="checkbox" label="Orientation">
             <defaultValue>false</defaultValue>
         </displayfield>
-
         <displayfield source="metadata" name="PlaceOfPublication" type="vocabularyList" label="Place">
             <!-- name of the vocabulary, required -->
             <vocabularyName>Subject terms</vocabularyName>
             <!-- search parameter, optional, repeatable -->
             <searchParameter>type=AccessLocations</searchParameter>            
         </displayfield>
-
         <displayfield source="person" name="Author" type="multivalue" searchable="true" />
         <displayfield source="metadata" name="TitleDocMain" type="text" required="false" label="Haupttitel" searchable="true" suffix=" steplocked:Validierung"/>
         <displayfield source="metadata" name="DocLanguage" type="text" required="false" label="Sprache"  searchable="true"/>
 
-
-        
+        <!-- define if the fields shall be preselected after the search of processes was done -->
         <preselectFields>false</preselectFields>
-        
+
+        <!-- list of fields that shall be shown for each found process
+                rulesetName: the name of the metadata type in the ruleset
+                label: label to show for the metadata
+                selectable: allow the field to be selected to use it
+         -->
         <importfield rulesetName="TitleDocMain" label="Titel" selectable="true"/>
         <importfield rulesetName="PublicationYear" label="Erscheinungsjahr" selectable="true"/>
         <importfield rulesetName="DocLanguage" selectable="true" label="Sprache"/>
