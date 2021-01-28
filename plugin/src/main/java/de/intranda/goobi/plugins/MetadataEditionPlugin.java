@@ -309,9 +309,11 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     vocabularyUrl = getVocabularyBaseName() + currentVocabulary.getId();
                     if (currentVocabulary != null) {
                         VocabularyManager.getAllRecords(currentVocabulary);
-                        vocabularyRecords = new ArrayList<>(currentVocabulary.getRecords().size());
+                        List<VocabRecord> recordList = currentVocabulary.getRecords();
+                        Collections.sort(recordList);
+                        vocabularyRecords = new ArrayList<>(recordList.size());
                         if (currentVocabulary != null && currentVocabulary.getId() != null) {
-                            for (VocabRecord vr : currentVocabulary.getRecords()) {
+                            for (VocabRecord vr : recordList) {
                                 for (Field f : vr.getFields()) {
                                     if (f.getDefinition().isMainEntry()) {
                                         vocabularyRecords.add(new SelectItem(String.valueOf(vr.getId()), f.getValue()));
@@ -334,6 +336,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     }
                     List<VocabRecord> records = VocabularyManager.findRecords(vocabularyName, vocabularySearchFields);
                     if (records != null && records.size() > 0) {
+                        Collections.sort(records);
                         vocabularyRecords = new ArrayList<>(records.size());
                         for (VocabRecord vr : records) {
 
