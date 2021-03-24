@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -255,8 +257,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private void initSearchFields(SubnodeConfiguration config) {
         preselectFields = config.getBoolean("/preselectFields");
         @SuppressWarnings("unchecked")
-        List<SubnodeConfiguration> fieldList = config.configurationsAt("/importfield");
-        for (SubnodeConfiguration field : fieldList) {
+        List<HierarchicalConfiguration> fieldList = config.configurationsAt("/importfield");
+        for (HierarchicalConfiguration field : fieldList) {
             String rulesetName = field.getString("@rulesetName");
             String label = field.getString("@label", rulesetName);
             boolean selectable = field.getBoolean("@selectable", false);
@@ -274,9 +276,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         //* Allow multiple properties to be entered and selected as checkboxes, drop down lists and as input text fields
         // get <field> list
-        @SuppressWarnings("unchecked")
-        List<SubnodeConfiguration> fieldList = config.configurationsAt("/displayfield");
-        for (SubnodeConfiguration field : fieldList) {
+        List<HierarchicalConfiguration> fieldList = config.configurationsAt("/displayfield");
+        for (HierarchicalConfiguration field : fieldList) {
             // each field has source, name, type, required attributes
             String source = field.getString("@source");
             String name = field.getString("@name");
@@ -294,15 +295,13 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             String defaultValue = field.getString("/defaultValue", null);
             String validationRegex = field.getString("/validationRegex", null);
             String validationErrorText = field.getString("/validationErrorText", "Value ist invalid");
-            @SuppressWarnings("unchecked")
-            List<String> valueList = field.getList("/value", null);
+            List<String> valueList = Arrays.asList(field.getStringArray("/value"));
             String vocabularyName = null;
             String vocabularyUrl = null;
             List<SelectItem> vocabularyRecords = null;
             if (type.equals("vocabularyList")) {
                 vocabularyName = field.getString("/vocabularyName");
-                @SuppressWarnings("unchecked")
-                List<String> fields = field.getList("/searchParameter", null);
+                List<String> fields = Arrays.asList(field.getStringArray("/searchParameter"));
 
                 if (fields == null) {
                     Vocabulary currentVocabulary = VocabularyManager.getVocabularyByTitle(vocabularyName);
