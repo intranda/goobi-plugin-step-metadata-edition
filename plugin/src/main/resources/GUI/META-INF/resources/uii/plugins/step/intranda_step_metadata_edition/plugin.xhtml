@@ -167,22 +167,34 @@
                                         target="#{AktuelleSchritteForm.myPlugin.currentField}" />
                                 </h:commandLink>
                             </ui:fragment>
-                            
-                            <ui:fragment rendered="#{field.repeatable}">
-                                 <h:commandLink
-                                    style="color: #666666; margin-right: 5px;"
-                                    styleClass="change-icon pull-right "
-                                    title="#{msgs.duplicate}"
-                                    action="#{AktuelleSchritteForm.myPlugin.duplicateField}">
-                                    <i class="fa fa-plus" />
-                                    <f:setPropertyActionListener
-                                        value="#{field}"
-                                        target="#{AktuelleSchritteForm.myPlugin.currentField}" />
-                                </h:commandLink>
-                            
-                            
-                            </ui:fragment>
-                        </div>
+
+                                <ui:fragment rendered="#{field.repeatable}">
+                                    <h:commandLink
+                                        style="color: #666666; margin-right: 5px;"
+                                        styleClass="change-icon pull-right "
+                                        title="#{msgs.remove}"
+                                        action="#{AktuelleSchritteForm.myPlugin.deleteField}">
+                                        <i class="fa fa-minus" />
+                                        <f:setPropertyActionListener
+                                            value="#{field}"
+                                            target="#{AktuelleSchritteForm.myPlugin.currentField}" />
+                                    </h:commandLink>
+
+
+                                    <h:commandLink
+                                        style="color: #666666; margin-right: 5px;"
+                                        styleClass="change-icon pull-right "
+                                        title="#{msgs.duplicate}"
+                                        action="#{AktuelleSchritteForm.myPlugin.duplicateField}">
+                                        <i class="fa fa-plus" />
+                                        <f:setPropertyActionListener
+                                            value="#{field}"
+                                            target="#{AktuelleSchritteForm.myPlugin.currentField}" />
+                                    </h:commandLink>
+
+
+                                </ui:fragment>
+                            </div>
 
                         <div
                             class="col-sm-9"

@@ -171,6 +171,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     private boolean displayMetadataImportButton = true;
 
+    private List<MetadataField> deleteList = new ArrayList<>();
+
     @Override
     public PluginReturnValue run() {
         return PluginReturnValue.FINISH;
@@ -711,6 +713,22 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             return;
         }
 
+        for (MetadataField mf : deleteList) {
+            if ("property".contains(mf.getSource())) {
+                Processproperty pp = mf.getProperty();
+                process.getEigenschaften().remove(pp);
+                if (pp.getId() != null) {
+                    PropertyManager.deleteProcessProperty(pp);
+                }
+            } else if ("metadata".contains(mf.getSource())) {
+                Metadata md = mf.getMetadata();
+                md.getParent().removeMetadata(md, true);
+            } else {
+                Person p = mf.getPerson();
+                p.getParent().removePerson(p, true);
+            }
+        }
+
         // save properties
         for (MetadataField mf : metadataFieldList) {
             if (mf.getProperty() != null) {
@@ -979,6 +997,24 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     log.error(e);
                 }
             }
+        }
+    }
+
+    public void deleteField() {
+        if (currentField != null) {
+            // check how many fields are available
+            int counter = 0;
+            for (MetadataField mf : metadataFieldList) {
+                if (currentField.getSource().equals(mf.getSource()) && currentField.getName().equals(mf.getName())) {
+                    counter++;
+                }
+            }
+            // found more than one field, allow deletion
+            if (counter > 1) {
+                metadataFieldList.remove(currentField);
+                deleteList.add(currentField);
+            }
+            currentField = null;
         }
     }
 
