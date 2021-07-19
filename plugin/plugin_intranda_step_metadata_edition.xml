@@ -77,7 +77,7 @@
         </displayfield>
         <displayfield source="person" name="Author" type="multivalue" searchable="true" />
         <displayfield source="metadata" name="TitleDocMain" type="text" required="false" label="Haupttitel" searchable="true" suffix=" steplocked:Validierung"/>
-        <displayfield source="metadata" name="DocLanguage" type="text" required="false" label="Sprache"  searchable="true"/>
+        <displayfield source="metadata" name="DocLanguage" type="text" required="false" label="Sprache"  searchable="true" repeatable="true"/>
 
         <!-- define if the fields shall be preselected after the search of processes was done -->
         <preselectFields>false</preselectFields>

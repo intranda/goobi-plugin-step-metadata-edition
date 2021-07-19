@@ -70,6 +70,8 @@ public class MetadataField {
     private String vocabularyUrl;
     private List<SelectItem> vocabularyList;
 
+    private boolean repeatable;
+
     public void setVocabularyValue(String value) {
         if (StringUtils.isNotBlank(value)) {
             for (SelectItem item : vocabularyList) {

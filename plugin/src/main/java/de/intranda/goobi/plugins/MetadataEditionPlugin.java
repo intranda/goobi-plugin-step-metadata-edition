@@ -298,6 +298,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             String helpText = field.getString("@helpText", "No help text defined.");
 
             boolean searchable = field.getBoolean("@searchable", false);
+            boolean repeatable = field.getBoolean("@repeatable", false);
             String searchSuffix = field.getString("@suffix");
 
             // each field can have defaultValue, validationRegex, validationErrorText, value (list) sub elements
@@ -377,6 +378,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         metadataField.setVocabularyList(vocabularyRecords);
                         metadataField.setVocabularyName(vocabularyName);
                         metadataField.setVocabularyUrl(vocabularyUrl);
+                        metadataField.setRepeatable(repeatable);
                         if (StringUtils.isBlank(prop.getWert())) {
                             prop.setWert(defaultValue);
                         }
@@ -403,6 +405,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     metadataField.setVocabularyList(vocabularyRecords);
                     metadataField.setVocabularyName(vocabularyName);
                     metadataField.setVocabularyUrl(vocabularyUrl);
+                    metadataField.setRepeatable(repeatable);
                     metadataFieldList.add(metadataField);
                 }
             } else if ("metadata".contains(source)) {
@@ -425,6 +428,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                             metadataField.setVocabularyList(vocabularyRecords);
                             metadataField.setVocabularyName(vocabularyName);
                             metadataField.setVocabularyUrl(vocabularyUrl);
+                            metadataField.setRepeatable(repeatable);
                             if (StringUtils.isBlank(md.getValue())) {
                                 md.setValue(defaultValue);
                             }
@@ -451,6 +455,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         metadataField.setVocabularyList(vocabularyRecords);
                         metadataField.setVocabularyName(vocabularyName);
                         metadataField.setVocabularyUrl(vocabularyUrl);
+                        metadataField.setRepeatable(repeatable);
                         metadataFieldList.add(metadataField);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);
@@ -922,7 +927,59 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         Client client = ClientBuilder.newClient();
         WebTarget base = client.target(reqUrl);
         WebTarget vocabularyBase = base.path("api").path("vocabulary");
-        return vocabularyBase.path("records").getUri().toString()+"/";
+        return vocabularyBase.path("records").getUri().toString() + "/";
+    }
+
+    public void duplicateField() {
+        if (currentField != null) {
+            MetadataField metadataField = new MetadataField(currentField.getSource(), currentField.getName(), currentField.getType(),
+                    currentField.getLabel(), currentField.getRequired(), currentField.getHelpText(), currentField.getSearchable());
+            metadataField.setValidationRegex(currentField.getValidationRegex());
+            metadataField.setValidationErrorText(currentField.getValidationErrorText());
+            metadataField.setValueList(currentField.getValueList());
+            metadataField.setSearchSuffix(currentField.getSearchSuffix());
+            metadataField.setVocabularyList(currentField.getVocabularyList());
+            metadataField.setVocabularyName(currentField.getVocabularyName());
+            metadataField.setVocabularyUrl(currentField.getVocabularyUrl());
+            metadataField.setRepeatable(currentField.isRepeatable());
+            metadataFieldList.add(metadataField);
+            if ("property".contains(currentField.getSource())) {
+                Processproperty property = new Processproperty();
+                property.setContainer(0);
+                property.setCreationDate(new Date());
+                property.setProcessId(process.getId());
+                property.setProzess(process);
+                property.setTitel(currentField.getName());
+                property.setType(PropertyType.String);
+                property.setWert(currentField.getProperty().getWert());
+                process.getEigenschaften().add(property);
+                metadataField.setProperty(property);
+
+            } else if ("metadata".contains(currentField.getSource())) {
+                try {
+                    Metadata md = new Metadata(currentField.getMetadata().getType());
+                    md.setValue(currentField.getMetadata().getValue());
+                    currentField.getMetadata().getParent().addMetadata(md);
+                    metadataField.setMetadata(md);
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+
+            } else {
+                try {
+                    Person person = new Person(currentField.getPerson().getType());
+                    person.setFirstname(currentField.getPerson().getFirstname());
+                    person.setLastname(currentField.getPerson().getLastname());
+                    person.setAutorityFile(currentField.getPerson().getAuthorityID(), currentField.getPerson().getAuthorityURI(),
+                            currentField.getPerson().getAuthorityValue());
+                    currentField.getPerson().getParent().addPerson(person);
+                    metadataField.setPerson(person);
+
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+            }
+        }
     }
 
 }
