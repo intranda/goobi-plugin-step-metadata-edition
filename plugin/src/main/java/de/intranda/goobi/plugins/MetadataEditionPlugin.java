@@ -165,6 +165,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Setter
     private boolean displaySearchOption = false;
 
+    @Getter
+    private boolean displayImageArea = true;
+
+    @Getter
+    private boolean displayMetadataImportButton = true;
+
     @Override
     public PluginReturnValue run() {
         return PluginReturnValue.FINISH;
@@ -240,6 +246,10 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         myconfig = ConfigPlugins.getProjectAndStepConfig(title, step);
         thumbnailSize = myconfig.getInt("thumbnailsize", 200);
         hideEmptyFields = myconfig.getBoolean("hideEmptyFields", true);
+
+        displayImageArea = myconfig.getBoolean("showImages", true);
+        displayMetadataImportButton = myconfig.getBoolean("showImportMetadata", true);
+
         try {
             if ("master".equalsIgnoreCase(myconfig.getString("imageFolder", null))) {
                 imageFolderName = process.getImagesOrigDirectory(true);

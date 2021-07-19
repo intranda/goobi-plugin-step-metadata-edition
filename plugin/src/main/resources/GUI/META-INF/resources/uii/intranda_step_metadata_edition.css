@@ -246,3 +246,7 @@
     box-shadow: none;
     background: none;
 }
+
+.margin-15 {
+    margin-bottom: 15px;
+}

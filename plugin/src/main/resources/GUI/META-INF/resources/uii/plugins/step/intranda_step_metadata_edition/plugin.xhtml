@@ -33,8 +33,7 @@
         prependId="false"
         id="metadataForm">
 
-        <div class="box box-color lightgrey box-bordered">
-
+        <h:panelGroup layout="block" styleClass="box box-color lightgrey box-bordered" rendered="#{AktuelleSchritteForm.myPlugin.displayImageArea}">
             <div class="box-title">
                 <h3>
                     <i class="fa fa-puzzle-piece"></i>
@@ -105,8 +104,8 @@
                     </div>
                 </h:panelGroup>
             </div>
-        </div>
-
+        </h:panelGroup>
+        
         <div class="box box-color lightgrey box-bordered">
 
             <div class="box-title">
@@ -313,14 +312,15 @@
                     <h:commandLink
                         styleClass="btn btn-primary font-size-s"
                         title="#{msgs.intranda_step_metadata_edition_searchForProcess}"
-                        action="#{AktuelleSchritteForm.myPlugin.openPopup}">
+                        action="#{AktuelleSchritteForm.myPlugin.openPopup}"
+                        rendered="#{AktuelleSchritteForm.myPlugin.displayMetadataImportButton}">
                         <i class="fa fa-search margin-right-5"></i>
                         <h:outputText value="#{msgs.intranda_step_metadata_edition_searchForProcess}" />
                     </h:commandLink>
 
                     <!-- Save -->
                     <h:commandLink
-                        styleClass="btn btn-success submitOnEnter pull-right font-size-s"
+                        styleClass="btn btn-success submitOnEnter pull-right font-size-s #{AktuelleSchritteForm.myPlugin.displayMetadataImportButton ? '' : 'margin-15'}"
                         id="absenden"
                         type="submit"
                         action="#{AktuelleSchritteForm.myPlugin.saveAllChanges}">
