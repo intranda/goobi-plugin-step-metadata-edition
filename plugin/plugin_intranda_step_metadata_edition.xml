@@ -52,6 +52,8 @@
                 suffix: a suffix that shall be added to the search query when the field content is searched
                 vocabularyName: name of the vocabulary to list records from (e.g. Subject terms)
                 searchParameter: optional repeatable parameter to restrict records from the vocabulary (e.g. type=AccessLocations)
+                repeatable: optional if the field shall be duplicateble and deletable
+                deletable: option if the field shall be deletable only
         -->
         <displayfield source="property" name="Template" type="text" required="false" helpText="This is an explaining text to define what shall be entered into this field.">
             <defaultValue></defaultValue>

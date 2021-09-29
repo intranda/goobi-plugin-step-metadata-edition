@@ -301,6 +301,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
             boolean searchable = field.getBoolean("@searchable", false);
             boolean repeatable = field.getBoolean("@repeatable", false);
+            boolean deletable = field.getBoolean("@deletable", false);
             String searchSuffix = field.getString("@suffix");
 
             // each field can have defaultValue, validationRegex, validationErrorText, value (list) sub elements
@@ -381,6 +382,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         metadataField.setVocabularyName(vocabularyName);
                         metadataField.setVocabularyUrl(vocabularyUrl);
                         metadataField.setRepeatable(repeatable);
+                        metadataField.setDeletable(deletable);
                         if (StringUtils.isBlank(prop.getWert())) {
                             prop.setWert(defaultValue);
                         }
@@ -408,6 +410,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     metadataField.setVocabularyName(vocabularyName);
                     metadataField.setVocabularyUrl(vocabularyUrl);
                     metadataField.setRepeatable(repeatable);
+                    metadataField.setDeletable(deletable);
                     metadataFieldList.add(metadataField);
                 }
             } else if ("metadata".contains(source)) {
@@ -431,6 +434,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                             metadataField.setVocabularyName(vocabularyName);
                             metadataField.setVocabularyUrl(vocabularyUrl);
                             metadataField.setRepeatable(repeatable);
+                            metadataField.setDeletable(deletable);
                             if (StringUtils.isBlank(md.getValue())) {
                                 md.setValue(defaultValue);
                             }
@@ -458,6 +462,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         metadataField.setVocabularyName(vocabularyName);
                         metadataField.setVocabularyUrl(vocabularyUrl);
                         metadataField.setRepeatable(repeatable);
+                        metadataField.setDeletable(deletable);
                         metadataFieldList.add(metadataField);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);

@@ -71,6 +71,7 @@ public class MetadataField {
     private List<SelectItem> vocabularyList;
 
     private boolean repeatable;
+    private boolean deletable;
 
     public void setVocabularyValue(String value) {
         if (StringUtils.isNotBlank(value)) {

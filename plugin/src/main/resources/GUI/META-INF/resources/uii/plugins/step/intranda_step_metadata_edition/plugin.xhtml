@@ -168,8 +168,7 @@
                                 </h:commandLink>
                             </ui:fragment>
 
-                                <ui:fragment rendered="#{field.repeatable}">
-                                    <h:commandLink
+                                    <h:commandLink rendered="#{field.repeatable or field.deletable}"
                                         style="color: #666666; margin-right: 5px;"
                                         styleClass="change-icon pull-right "
                                         title="#{msgs.remove}"
@@ -180,8 +179,7 @@
                                             target="#{AktuelleSchritteForm.myPlugin.currentField}" />
                                     </h:commandLink>
 
-
-                                    <h:commandLink
+                                    <h:commandLink rendered="#{field.repeatable}"
                                         style="color: #666666; margin-right: 5px;"
                                         styleClass="change-icon pull-right "
                                         title="#{msgs.duplicate}"
@@ -193,7 +191,6 @@
                                     </h:commandLink>
 
 
-                                </ui:fragment>
                             </div>
 
                         <div
