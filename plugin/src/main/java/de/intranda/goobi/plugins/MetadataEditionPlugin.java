@@ -727,10 +727,14 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
             } else if ("metadata".contains(mf.getSource())) {
                 Metadata md = mf.getMetadata();
-                md.getParent().removeMetadata(md, true);
+                if (md.getParent()!= null) {
+                    md.getParent().removeMetadata(md, true);
+                }
             } else {
                 Person p = mf.getPerson();
-                p.getParent().removePerson(p, true);
+                if (p.getParent()!= null) {
+                    p.getParent().removePerson(p, true);
+                }
             }
         }
 
