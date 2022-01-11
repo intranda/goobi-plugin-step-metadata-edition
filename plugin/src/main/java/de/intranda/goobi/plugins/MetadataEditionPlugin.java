@@ -128,7 +128,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private int imageIndex = 0;
 
     @Getter
-    private List<MetadataField> metadataFieldList = new ArrayList<>();
+    private List<ConfiguredField> metadataFieldList = new ArrayList<>();
 
     @Getter
     @Setter
@@ -172,6 +172,19 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private boolean displayMetadataImportButton = true;
 
     private List<MetadataField> deleteList = new ArrayList<>();
+
+    @Getter
+    @Setter
+    private String newValue;
+
+    private String newField;
+
+    @Getter
+    private ConfiguredField selectedField;
+
+    @Getter
+    @Setter
+    private boolean displayMetadataAddPopup = false;
 
     @Override
     public PluginReturnValue run() {
@@ -223,7 +236,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         for (Metadata md : lstMetadata) {
             if (md.getType().getName().equals("_representative")) {
                 try {
-                    Integer value = new Integer(md.getValue());
+                    Integer value = Integer.parseInt(md.getValue());
                     if (value > 0) {
                         imageIndex = value - 1;
                     }
@@ -268,7 +281,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     private void initSearchFields(SubnodeConfiguration config) {
         preselectFields = config.getBoolean("/preselectFields");
-        @SuppressWarnings("unchecked")
         List<HierarchicalConfiguration> fieldList = config.configurationsAt("/importfield");
         for (HierarchicalConfiguration field : fieldList) {
             String rulesetName = field.getString("@rulesetName");
@@ -367,27 +379,33 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     }
                 }
             }
+            ConfiguredField metadataField = new ConfiguredField(source, name, type, label, required, helpText, searchable);
+            metadataField.setStructType(structType);
+            metadataField.setDefaultValue(defaultValue);
+            metadataField.setValidationRegex(validationRegex);
+            metadataField.setValidationErrorText(validationErrorText);
+            metadataField.setValueList(valueList);
+            metadataField.setSearchSuffix(searchSuffix);
+            metadataField.setVocabularyList(vocabularyRecords);
+            metadataField.setVocabularyName(vocabularyName);
+            metadataField.setVocabularyUrl(vocabularyUrl);
+            metadataField.setRepeatable(repeatable);
+            metadataField.setDeletable(deletable);
+            metadataFieldList.add(metadataField);
+        }
 
+        for (ConfiguredField cf : metadataFieldList) {
             boolean found = false;
-            if ("property".contains(source)) {
+            if ("property".contains(cf.getSource())) {
                 for (Processproperty prop : properties) {
-                    if (prop.getTitel().equals(name)) {
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
-                        metadataField.setValidationRegex(validationRegex);
-                        metadataField.setValidationErrorText(validationErrorText);
-                        metadataField.setValueList(valueList);
-                        metadataField.setProperty(prop);
-                        metadataField.setSearchSuffix(searchSuffix);
-                        metadataField.setVocabularyList(vocabularyRecords);
-                        metadataField.setVocabularyName(vocabularyName);
-                        metadataField.setVocabularyUrl(vocabularyUrl);
-                        metadataField.setRepeatable(repeatable);
-                        metadataField.setDeletable(deletable);
-                        if (StringUtils.isBlank(prop.getWert())) {
-                            prop.setWert(defaultValue);
-                        }
+                    if (prop.getTitel().equals(cf.getName())) {
                         found = true;
-                        metadataFieldList.add(metadataField);
+                        MetadataField mf = new MetadataField(cf);
+                        mf.setProperty(prop);
+                        if (StringUtils.isBlank(prop.getWert())) {
+                            prop.setWert(cf.getDefaultValue());
+                        }
+                        cf.addMetadataField(mf);
                     }
                 }
                 if (!found) {
@@ -396,26 +414,19 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     property.setCreationDate(new Date());
                     property.setProcessId(process.getId());
                     property.setProzess(process);
-                    property.setTitel(name);
+                    property.setTitel(cf.getName());
                     property.setType(PropertyType.String);
-                    property.setWert(defaultValue);
+                    property.setWert(cf.getDefaultValue());
                     process.getEigenschaften().add(property);
-                    MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
-                    metadataField.setValidationRegex(validationRegex);
-                    metadataField.setValidationErrorText(validationErrorText);
-                    metadataField.setValueList(valueList);
-                    metadataField.setProperty(property);
-                    metadataField.setSearchSuffix(searchSuffix);
-                    metadataField.setVocabularyList(vocabularyRecords);
-                    metadataField.setVocabularyName(vocabularyName);
-                    metadataField.setVocabularyUrl(vocabularyUrl);
-                    metadataField.setRepeatable(repeatable);
-                    metadataField.setDeletable(deletable);
-                    metadataFieldList.add(metadataField);
+                    MetadataField mf = new MetadataField(cf);
+                    mf.setProperty(property);
+                    property.setWert(cf.getDefaultValue());
+                    cf.addMetadataField(mf);
                 }
-            } else if ("metadata".contains(source)) {
+
+            } else if ("metadata".contains(cf.getSource())) {
                 List<Metadata> metadataList;
-                if (anchor != null && structType.equals("anchor")) {
+                if (anchor != null && cf.getStructType().equals("anchor")) {
                     metadataList = anchor.getAllMetadata();
                 } else {
                     metadataList = logical.getAllMetadata();
@@ -423,47 +434,29 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
                 if (metadataList != null) {
                     for (Metadata md : metadataList) {
-                        if (md.getType().getName().equals(name)) {
-                            MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
-                            metadataField.setValidationRegex(validationRegex);
-                            metadataField.setValidationErrorText(validationErrorText);
-                            metadataField.setValueList(valueList);
-                            metadataField.setMetadata(md);
-                            metadataField.setSearchSuffix(searchSuffix);
-                            metadataField.setVocabularyList(vocabularyRecords);
-                            metadataField.setVocabularyName(vocabularyName);
-                            metadataField.setVocabularyUrl(vocabularyUrl);
-                            metadataField.setRepeatable(repeatable);
-                            metadataField.setDeletable(deletable);
-                            if (StringUtils.isBlank(md.getValue())) {
-                                md.setValue(defaultValue);
-                            }
+                        if (md.getType().getName().equals(cf.getName())) {
                             found = true;
-                            metadataFieldList.add(metadataField);
+                            if (StringUtils.isBlank(md.getValue())) {
+                                md.setValue(cf.getDefaultValue());
+                            }
+                            MetadataField mf = new MetadataField(cf);
+                            mf.setMetadata(md);
+                            cf.addMetadataField(mf);
                         }
                     }
                 }
                 if (!found) {
                     try {
-                        Metadata md = new Metadata(prefs.getMetadataTypeByName(name));
-                        md.setValue(defaultValue);
-                        if (anchor != null && structType.equals("anchor")) {
+                        Metadata md = new Metadata(prefs.getMetadataTypeByName(cf.getName()));
+                        md.setValue(cf.getDefaultValue());
+                        if (anchor != null && cf.getStructType().equals("anchor")) {
                             anchor.addMetadata(md);
                         } else {
                             logical.addMetadata(md);
                         }
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
-                        metadataField.setValidationRegex(validationRegex);
-                        metadataField.setValidationErrorText(validationErrorText);
-                        metadataField.setValueList(valueList);
-                        metadataField.setMetadata(md);
-                        metadataField.setSearchSuffix(searchSuffix);
-                        metadataField.setVocabularyList(vocabularyRecords);
-                        metadataField.setVocabularyName(vocabularyName);
-                        metadataField.setVocabularyUrl(vocabularyUrl);
-                        metadataField.setRepeatable(repeatable);
-                        metadataField.setDeletable(deletable);
-                        metadataFieldList.add(metadataField);
+                        MetadataField mf = new MetadataField(cf);
+                        mf.setMetadata(md);
+                        cf.addMetadataField(mf);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);
                     }
@@ -472,7 +465,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             } else {
                 // person
                 List<Person> personList;
-                if (anchor != null && structType.equals("anchor")) {
+                if (anchor != null && cf.getStructType().equals("anchor")) {
                     personList = anchor.getAllPersons();
                 } else {
                     personList = logical.getAllPersons();
@@ -480,38 +473,25 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
                 if (personList != null) {
                     for (Person p : personList) {
-                        if (p.getType().getName().equals(name)) {
-                            MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
-                            metadataField.setValidationRegex(validationRegex);
-                            metadataField.setValidationErrorText(validationErrorText);
-                            metadataField.setValueList(valueList);
-                            metadataField.setPerson(p);
-                            metadataField.setSearchSuffix(searchSuffix);
-                            metadataField.setVocabularyList(vocabularyRecords);
-                            metadataField.setVocabularyName(vocabularyName);
-                            metadataField.setVocabularyUrl(vocabularyUrl);
+                        if (p.getType().getName().equals(cf.getName())) {
                             found = true;
-                            metadataFieldList.add(metadataField);
+                            MetadataField mf = new MetadataField(cf);
+                            mf.setPerson(p);
+                            cf.addMetadataField(mf);
                         }
                     }
                 }
                 if (!found) {
                     try {
-                        Person person = new Person(prefs.getMetadataTypeByName(name));
-                        if (anchor != null && structType.equals("anchor")) {
+                        Person person = new Person(prefs.getMetadataTypeByName(cf.getName()));
+                        if (anchor != null && cf.getStructType().equals("anchor")) {
                             anchor.addPerson(person);
                         } else {
                             logical.addPerson(person);
                         }
-                        MetadataField metadataField = new MetadataField(source, name, type, label, required, helpText, searchable);
-                        metadataField.setValidationRegex(validationRegex);
-                        metadataField.setValidationErrorText(validationErrorText);
-                        metadataField.setValueList(valueList);
-                        metadataField.setPerson(person);
-                        metadataField.setSearchSuffix(searchSuffix);
-                        metadataField.setVocabularyList(vocabularyRecords);
-                        metadataField.setVocabularyName(vocabularyName);
-                        metadataField.setVocabularyUrl(vocabularyUrl);
+                        MetadataField mf = new MetadataField(cf);
+                        mf.setPerson(person);
+                        cf.addMetadataField(mf);
                     } catch (MetadataTypeNotAllowedException e) {
                         log.error(e);
                     }
@@ -703,45 +683,60 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void saveAllChanges() {
 
-        boolean valid = true;
-        for (MetadataField mf : metadataFieldList) {
-            if (mf.getRequired().booleanValue() && StringUtils.isBlank(mf.getValue())) {
-                Helper.setFehlerMeldung(mf.getLabel() + ": " + Helper.getTranslation("valueIsRequired"), "");
-                valid = false;
-            } else if (StringUtils.isNotBlank(mf.getValidationRegex()) && !mf.getValue().matches(mf.getValidationRegex())) {
-                Helper.setFehlerMeldung(mf.getLabel() + ": " + mf.getValidationErrorText(), "");
-                valid = false;
+        boolean totalValid = true;
+        for (ConfiguredField mf : metadataFieldList) {
+            if (mf.getRequired().booleanValue()) {
+                boolean fieldValid = false;
+                for (MetadataField metadataField : mf.getMetadataFields()) {
+                    if (StringUtils.isNotBlank(metadataField.getValue())) {
+                        fieldValid = true;
+                    }
+                }
+                if (!fieldValid) {
+                    Helper.setFehlerMeldung(mf.getLabel() + ": " + Helper.getTranslation("valueIsRequired"), "");
+                    totalValid = false;
+                }
+
+            } else if (StringUtils.isNotBlank(mf.getValidationRegex())) {
+                for (MetadataField metadataField : mf.getMetadataFields()) {
+                    if (!metadataField.getValue().matches(mf.getValidationRegex())) {
+                        Helper.setFehlerMeldung(mf.getLabel() + ": " + mf.getValidationErrorText(), "");
+                        totalValid = false;
+                    }
+                }
             }
         }
 
-        if (!valid) {
+        if (!totalValid) {
             return;
         }
 
         for (MetadataField mf : deleteList) {
-            if ("property".contains(mf.getSource())) {
+            if ("property".contains(mf.getConfiguredField().getSource())) {
                 Processproperty pp = mf.getProperty();
                 process.getEigenschaften().remove(pp);
                 if (pp.getId() != null) {
                     PropertyManager.deleteProcessProperty(pp);
                 }
-            } else if ("metadata".contains(mf.getSource())) {
+            } else if ("metadata".contains(mf.getConfiguredField().getSource())) {
                 Metadata md = mf.getMetadata();
-                if (md.getParent()!= null) {
+                if (md.getParent() != null) {
                     md.getParent().removeMetadata(md, true);
                 }
             } else {
                 Person p = mf.getPerson();
-                if (p.getParent()!= null) {
+                if (p.getParent() != null) {
                     p.getParent().removePerson(p, true);
                 }
             }
         }
 
         // save properties
-        for (MetadataField mf : metadataFieldList) {
-            if (mf.getProperty() != null) {
-                PropertyManager.saveProcessProperty(mf.getProperty());
+        for (ConfiguredField cf : metadataFieldList) {
+            for (MetadataField mf : cf.getMetadataFields()) {
+                if (mf.getProperty() != null) {
+                    PropertyManager.saveProcessProperty(mf.getProperty());
+                }
             }
         }
         // save reading direction
@@ -780,7 +775,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             MetadataType mdt = prefs.getMetadataTypeByName("_representative");
             try {
                 Metadata md = new Metadata(mdt);
-                Integer value = new Integer(imageIndex + 1);
+                Integer value = imageIndex + 1;
                 md.setValue(String.valueOf(value));
 
                 physical.addMetadata(md);
@@ -874,11 +869,11 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         StringBuilder searchQuery = new StringBuilder();
 
-        switch (currentField.getSource()) {
+        switch (currentField.getConfiguredField().getSource()) {
             case "property":
                 // "processproperty:name:value"
                 searchQuery.append("\"processproperty:");
-                searchQuery.append(currentField.getName());
+                searchQuery.append(currentField.getConfiguredField().getName());
                 searchQuery.append(":");
                 searchQuery.append(currentField.getValue());
                 searchQuery.append("\" ");
@@ -886,7 +881,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             case "metadata":
                 // "meta:name:value"
                 searchQuery.append("\"meta:");
-                searchQuery.append(currentField.getName());
+                searchQuery.append(currentField.getConfiguredField().getName());
                 searchQuery.append(":");
                 searchQuery.append(currentField.getValue());
                 searchQuery.append("\" ");
@@ -903,7 +898,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     personName = currentField.getPerson().getLastname();
                 }
                 searchQuery.append("\"meta:");
-                searchQuery.append(currentField.getName());
+                searchQuery.append(currentField.getConfiguredField().getName());
                 searchQuery.append(":");
                 searchQuery.append(personName);
                 searchQuery.append("\" ");
@@ -911,7 +906,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 break;
         }
         // addd configured suffix
-        String suffix = currentField.getSearchSuffix();
+        String suffix = currentField.getConfiguredField().getSearchSuffix();
         if (StringUtils.isNotBlank(suffix)) {
             searchQuery.append(suffix);
         }
@@ -935,12 +930,22 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void handleClose(CloseEvent event) {
         displaySearchPopup = false;
+        displayMetadataAddPopup = false;
     }
 
     public void openPopup() {
         processList = null;
         displaySearchOption = true;
         displaySearchPopup = true;
+        displayMetadataAddPopup = false;
+    }
+
+    public void openMetadataPopup() {
+        newField = null;
+        newValue = null;
+
+        displaySearchPopup = false;
+        displayMetadataAddPopup = true;
     }
 
     private String getVocabularyBaseName() {
@@ -957,32 +962,26 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         return vocabularyBase.path("records").getUri().toString() + "/";
     }
 
-    public void duplicateField() {
-        if (currentField != null) {
-            MetadataField metadataField = new MetadataField(currentField.getSource(), currentField.getName(), currentField.getType(),
-                    currentField.getLabel(), currentField.getRequired(), currentField.getHelpText(), currentField.getSearchable());
-            metadataField.setValidationRegex(currentField.getValidationRegex());
-            metadataField.setValidationErrorText(currentField.getValidationErrorText());
-            metadataField.setValueList(currentField.getValueList());
-            metadataField.setSearchSuffix(currentField.getSearchSuffix());
-            metadataField.setVocabularyList(currentField.getVocabularyList());
-            metadataField.setVocabularyName(currentField.getVocabularyName());
-            metadataField.setVocabularyUrl(currentField.getVocabularyUrl());
-            metadataField.setRepeatable(currentField.isRepeatable());
-            metadataFieldList.add(metadataField);
-            if ("property".contains(currentField.getSource())) {
+    // unused
+    public void addField() {
+        ConfiguredField field = currentField.getConfiguredField();
+        if (field != null) {
+            MetadataField metadataField = new MetadataField(currentField.getConfiguredField());
+            field.addMetadataField(metadataField);
+
+            if ("property".contains(field.getSource())) {
                 Processproperty property = new Processproperty();
                 property.setContainer(0);
                 property.setCreationDate(new Date());
                 property.setProcessId(process.getId());
                 property.setProzess(process);
-                property.setTitel(currentField.getName());
+                property.setTitel(field.getName());
                 property.setType(PropertyType.String);
                 property.setWert(currentField.getProperty().getWert());
                 process.getEigenschaften().add(property);
                 metadataField.setProperty(property);
 
-            } else if ("metadata".contains(currentField.getSource())) {
+            } else if ("metadata".contains(field.getSource())) {
                 try {
                     Metadata md = new Metadata(currentField.getMetadata().getType());
                     md.setValue(currentField.getMetadata().getValue());
@@ -1011,19 +1010,111 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void deleteField() {
         if (currentField != null) {
-            // check how many fields are available
-            int counter = 0;
-            for (MetadataField mf : metadataFieldList) {
-                if (currentField.getSource().equals(mf.getSource()) && currentField.getName().equals(mf.getName())) {
-                    counter++;
+            for (ConfiguredField cf : metadataFieldList) {
+                if (cf.getSource().equals(currentField.getConfiguredField().getSource())) {
+                    cf.getMetadataFields().remove(currentField);
                 }
             }
-            // found more than one field, allow deletion
-            if (counter > 1) {
-                metadataFieldList.remove(currentField);
-                deleteList.add(currentField);
-            }
+            deleteList.add(currentField);
             currentField = null;
+        }
+    }
+
+    public List<SelectItem> getPossibleFields() {
+        List<SelectItem> answer = new ArrayList<>();
+        for (ConfiguredField cf : metadataFieldList) {
+            if ((cf.isRepeatable() || cf.getMetadataFields().isEmpty())
+                    && (!cf.getType().equals("textReadonly") && !cf.getType().equals("textareaReadonly"))) {
+                answer.add(new SelectItem(cf.getName(), cf.getLabel()));
+            }
+        }
+        return answer;
+    }
+
+    public void addMetadataField() {
+        displayMetadataAddPopup = false;
+
+        MetadataField mf = new MetadataField(selectedField);
+        selectedField.addMetadataField(mf);
+        switch (selectedField.getSource()) {
+            case "property":
+                Processproperty property = new Processproperty();
+                property.setContainer(0);
+                property.setCreationDate(new Date());
+                property.setProcessId(process.getId());
+                property.setProzess(process);
+                property.setTitel(selectedField.getName());
+                property.setType(PropertyType.String);
+                property.setWert(selectedField.getDefaultValue());
+                process.getEigenschaften().add(property);
+                mf.setProperty(property);
+                if ("vocabularyList".equals(selectedField.getType())) {
+                    for (SelectItem item : selectedField.getVocabularyList()) {
+                        if (newValue.equals(item.getValue())) {
+                            property.setWert(item.getLabel());
+                            break;
+                        }
+                    }
+                } else {
+                    property.setWert(newValue);
+                }
+                break;
+            case "metadata":
+                try {
+                    Metadata md = new Metadata(prefs.getMetadataTypeByName(selectedField.getName()));
+                    if ("vocabularyList".equals(selectedField.getType())) {
+                        for (SelectItem item : selectedField.getVocabularyList()) {
+                            if (newValue.equals(item.getValue())) {
+                                md.setValue(item.getLabel());
+                                md.setAutorityFile(selectedField.getVocabularyName(), selectedField.getVocabularyUrl(),
+                                        selectedField.getVocabularyUrl() + "/" + newValue);
+                                break;
+                            }
+                        }
+                    } else {
+                        md.setValue(newValue);
+                    }
+                    if (anchor != null && selectedField.getStructType().equals("anchor")) {
+                        anchor.addMetadata(md);
+                    } else {
+                        logical.addMetadata(md);
+                    }
+                    mf.setMetadata(md);
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+                break;
+            default:
+                try {
+                    Person person = new Person(prefs.getMetadataTypeByName(selectedField.getName()));
+                    if (anchor != null && selectedField.getStructType().equals("anchor")) {
+                        anchor.addPerson(person);
+                    } else {
+                        logical.addPerson(person);
+                    }
+                    person.setLastname(newValue);
+                    mf.setPerson(person);
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+                break;
+        }
+
+    }
+
+    public String getNewField() {
+        return newField;
+    }
+
+    public void setNewField(String newField) {
+        if (this.newField == null || !this.newField.equals(newField)) {
+            for (ConfiguredField cf : metadataFieldList) {
+                if (cf.getName().equals(newField)) {
+                    selectedField = cf;
+                    break;
+                }
+            }
+            this.newField = newField;
         }
     }
 

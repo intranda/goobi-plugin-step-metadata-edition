@@ -6,7 +6,9 @@
     xmlns:h="http://java.sun.com/jsf/html"
     xmlns:x="http://myfaces.apache.org/tomahawk"
     xmlns:intranda="http://xmlns.jcp.org/jsf/composite/composites"
-    xmlns:p="http://primefaces.org/ui">
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
+    xmlns:jsf="http://xmlns.jcp.org/jsf">
 
     <link
         rel="stylesheet"
@@ -17,7 +19,9 @@
     float: left;
     margin: 7px;
     width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
-    height:#{AktuelleSchritteForm.myPlugin.thumbnailSize+55}px;
+    height: #{AktuelleSchritteForm .myPlugin.thumbnailSize+55}px;
+
+
 }
 .goobi-thumbnail .goobi-thumbnail-image {
     float: left;
@@ -33,7 +37,10 @@
         prependId="false"
         id="metadataForm">
 
-        <h:panelGroup layout="block" styleClass="box box-color lightgrey box-bordered" rendered="#{AktuelleSchritteForm.myPlugin.displayImageArea}">
+        <h:panelGroup
+            layout="block"
+            styleClass="box box-color lightgrey box-bordered"
+            rendered="#{AktuelleSchritteForm.myPlugin.displayImageArea}">
             <div class="box-title">
                 <h3>
                     <i class="fa fa-puzzle-piece"></i>
@@ -62,17 +69,19 @@
                     rendered="#{AktuelleSchritteForm.myPlugin.sizeOfImageList gt 0 and !AktuelleSchritteForm.myPlugin.collapsedImageSelection}">
 
                     <!-- Thumbnail list -->
-                    <div
-                        class="flex-container"
-                        dir="#{AktuelleSchritteForm.myPlugin.flowDir}">
+                    <h:panelGroup
+                        layout="block"
+                        styleClass="flex-container"
+                        pt:dir="#{AktuelleSchritteForm.myPlugin.flowDir}">
 
                         <ui:repeat
                             var="image"
                             value="#{AktuelleSchritteForm.myPlugin.allImages}"
                             varStatus="status">
-                            <div
-                                class="goobi-thumbnail #{AktuelleSchritteForm.myPlugin.image.imageName eq image.imageName?'img-active':'font-light'}"
-                                dir="auto">
+                            <h:panelGroup
+                                layout="block"
+                                styleClass="goobi-thumbnail #{AktuelleSchritteForm.myPlugin.image.imageName eq image.imageName?'img-active':'font-light'}"
+                                pt:dir="auto">
                                 <div class="goobi-thumbnail-image">
 
                                     <div class="thumb">
@@ -98,14 +107,14 @@
                                     <h:outputText value="#{image.imageName}"></h:outputText>
                                 </div>
 
-                            </div>
+                            </h:panelGroup>
 
                         </ui:repeat>
-                    </div>
+                    </h:panelGroup>
                 </h:panelGroup>
             </div>
         </h:panelGroup>
-        
+
         <div class="box box-color lightgrey box-bordered">
 
             <div class="box-title">
@@ -132,43 +141,45 @@
             <div class="box-content nopadding">
 
                 <ui:repeat
-                
                     value="#{AktuelleSchritteForm.myPlugin.metadataFieldList}"
-                    var="field"
+                    var="configuredField"
                     varStatus="status"
                     rendered="#{!AktuelleSchritteForm.myPlugin.collapsedProperties}">
 
-					<ui:fragment rendered="#{(!AktuelleSchritteForm.myPlugin.hideEmptyFields or 
-						(field.type == 'textReadonly' or field.type == 'textareaReadonly') and (field.value ne '' and field.value ne null))
-						or (field.type ne 'textReadonly' and field.type ne 'textareaReadonly')}">
-					<div class="form-group">
-                        <div class="col-sm-3 control-label">
+                    <ui:repeat
+                        var="field"
+                        value="#{configuredField.metadataFields}">
 
-                            <h:outputLabel
-                                for="field_#{status.index}"
-                                value="#{msgs[field.label]}" />
+                        <ui:fragment rendered="#{!AktuelleSchritteForm.myPlugin.hideEmptyFields or configuredField.showField}">
+                            <div class="form-group">
+                                <div class="col-sm-3 control-label">
 
-                            <h:panelGroup rendered="#{field.required}">
-                                <i class="fa fa-asterisk pull-right font-asterisk margin-left-regular" />
-                            </h:panelGroup>
+                                    <h:outputLabel
+                                        for="field_#{status.index}"
+                                        value="#{msgs[configuredField.label]}" />
 
-                            <ui:fragment rendered="#{field.searchable}">
-                                <h:commandLink
-                                    style="color: #666666;"
-                                    styleClass="change-icon pull-right "
-                                    title="#{msgs.search}"
-                                    action="#{AktuelleSchritteForm.myPlugin.seachField}">
-                                    <i class="fa fa-search" />
-                                    <f:setPropertyActionListener
-                                        value="true"
-                                        target="#{AktuelleSchritteForm.myPlugin.displaySearchPopup}" />
-                                    <f:setPropertyActionListener
-                                        value="#{field}"
-                                        target="#{AktuelleSchritteForm.myPlugin.currentField}" />
-                                </h:commandLink>
-                            </ui:fragment>
+                                    <h:panelGroup rendered="#{configuredField.required}">
+                                        <i class="fa fa-asterisk pull-right font-asterisk margin-left-regular" />
+                                    </h:panelGroup>
 
-                                    <h:commandLink rendered="#{field.repeatable or field.deletable}"
+                                    <ui:fragment rendered="#{configuredField.searchable}">
+                                        <h:commandLink
+                                            style="color: #666666;"
+                                            styleClass="change-icon pull-right "
+                                            title="#{msgs.search}"
+                                            action="#{AktuelleSchritteForm.myPlugin.seachField}">
+                                            <i class="fa fa-search" />
+                                            <f:setPropertyActionListener
+                                                value="true"
+                                                target="#{AktuelleSchritteForm.myPlugin.displaySearchPopup}" />
+                                            <f:setPropertyActionListener
+                                                value="#{field}"
+                                                target="#{AktuelleSchritteForm.myPlugin.currentField}" />
+                                        </h:commandLink>
+                                    </ui:fragment>
+
+                                    <h:commandLink
+                                        rendered="#{configuredField.repeatable or configuredField.deletable}"
                                         style="color: #666666; margin-right: 5px;"
                                         styleClass="change-icon pull-right "
                                         title="#{msgs.remove}"
@@ -179,162 +190,174 @@
                                             target="#{AktuelleSchritteForm.myPlugin.currentField}" />
                                     </h:commandLink>
 
-                                    <h:commandLink rendered="#{field.repeatable}"
-                                        style="color: #666666; margin-right: 5px;"
-                                        styleClass="change-icon pull-right "
-                                        title="#{msgs.duplicate}"
-                                        action="#{AktuelleSchritteForm.myPlugin.duplicateField}">
-                                        <i class="fa fa-plus" />
-                                        <f:setPropertyActionListener
-                                            value="#{field}"
-                                            target="#{AktuelleSchritteForm.myPlugin.currentField}" />
-                                    </h:commandLink>
+<!--                                     <h:commandLink -->
+<!--                                         rendered="#{configuredField.repeatable}" -->
+<!--                                         style="color: #666666; margin-right: 5px;" -->
+<!--                                         styleClass="change-icon pull-right " -->
+<!--                                         title="#{msgs.duplicate}" -->
+<!--                                         action="#{AktuelleSchritteForm.myPlugin.addField}"> -->
+<!--                                         <i class="fa fa-plus" /> -->
+<!--                                         <f:setPropertyActionListener -->
+<!--                                             value="#{field}" -->
+<!--                                             target="#{AktuelleSchritteForm.myPlugin.currentField}" /> -->
+<!--                                     </h:commandLink> -->
+
+                                </div>
+
+                                <div
+                                    class="col-sm-9"
+                                    id="field_#{status.index}">
+
+                                    <ui:fragment rendered="#{configuredField.type == 'text'}">
+                                        <x:inputText
+                                            styleClass="form-control"
+                                            value="#{field.value}"
+                                            required="false"
+                                            id="field_#{status.index}">
+                                            <f:ajax
+                                                execute="@this"
+                                                render="@this"
+                                                event="blur" />
+                                        </x:inputText>
+                                    </ui:fragment>
+
+                                    <ui:fragment rendered="#{configuredField.type == 'textarea'}">
+                                        <h:inputTextarea
+                                            styleClass="form-control"
+                                            value="#{field.value}"
+                                            required="false"
+                                            style="resize: vertical;min-height:7em;">
+                                            <f:ajax
+                                                execute="@this"
+                                                render="@this"
+                                                event="blur" />
+                                        </h:inputTextarea>
+                                    </ui:fragment>
+
+                                    <ui:fragment rendered="#{configuredField.type == 'textReadonly'}">
+                                        <x:inputText
+                                            styleClass="form-control"
+                                            value="#{field.value}"
+                                            required="false"
+                                            readonly="true">
+                                        </x:inputText>
+                                    </ui:fragment>
+
+                                    <ui:fragment rendered="#{configuredField.type == 'textareaReadonly'}">
+                                        <h:inputTextarea
+                                            styleClass="form-control"
+                                            value="#{field.value}"
+                                            required="false"
+                                            readonly="true"
+                                            style="resize: vertical;min-height:7em;">
+                                        </h:inputTextarea>
+                                    </ui:fragment>
+
+                                    <ui:fragment rendered="#{configuredField.type == 'list'}">
+                                        <h:selectOneMenu
+                                            styleClass="form-control"
+                                            value="#{field.value}">
+                                            <f:ajax
+                                                event="change"
+                                                render="@this" />
+                                            <f:selectItem
+                                                itemValue=""
+                                                itemLabel="#{msgs.bitteAuswaehlen}"
+                                                itemDisabled="true" />
+                                            <f:selectItems
+                                                value="#{configuredField.valueList}"
+                                                var="item"
+                                                itemLabel="#{item}"
+                                                itemValue="#{item}" />
+                                        </h:selectOneMenu>
+                                    </ui:fragment>
 
 
+                                    <ui:fragment rendered="#{configuredField.type == 'vocabularyList'}">
+                                        <h:selectOneMenu
+                                            styleClass="form-control"
+                                            value="#{field.vocabularyValue}">
+                                            <f:ajax
+                                                event="change"
+                                                render="@this" />
+                                            <f:selectItem
+                                                itemValue=""
+                                                itemLabel="#{msgs.bitteAuswaehlen}"
+                                                itemDisabled="false" />
+                                            <f:selectItems
+                                                value="#{configuredField.vocabularyList}"
+                                                var="item"
+                                                itemLabel="#{item}"
+                                                itemValue="#{item}" />
+                                        </h:selectOneMenu>
+                                    </ui:fragment>
+
+                                    <ui:fragment rendered="#{configuredField.type == 'checkbox'}">
+                                        <h:selectBooleanCheckbox
+                                            styleClass="form-control checkbox-height-fix"
+                                            style="width: auto;"
+                                            value="#{field.value}">
+                                            <f:ajax
+                                                event="change"
+                                                render="@this"
+                                                tabindex="#{cc.attrs.tabindex}" />
+                                        </h:selectBooleanCheckbox>
+                                    </ui:fragment>
+
+                                    <ui:fragment rendered="#{configuredField.type == 'multivalue'}">
+
+                                        <intranda:formOutputText
+                                            label="#{msgs.rolle}"
+                                            field="#{msgs[configuredField.label]}"
+                                            name="role_#{status.index}"
+                                            fieldStyle="form-control" />
+
+                                        <intranda:formInputTextAjax
+                                            name="firstname_#{status.index}"
+                                            label="#{msgs.vorname}"
+                                            field="#{field.person.firstname}"
+                                            fieldStyle="form-control"
+                                            required="false"
+                                            execute="@this"
+                                            render="@this" />
+
+                                        <intranda:formInputTextAjax
+                                            name="firstname_#{status.index}"
+                                            label="#{msgs.nachname}"
+                                            field="#{field.person.lastname}"
+                                            fieldStyle="form-control"
+                                            required="false"
+                                            execute="@this"
+                                            render="@this" />
+
+                                    </ui:fragment>
+                                    <h:message
+                                        for="field_#{status.index}"
+                                        showDetail="true"
+                                        styleClass="help-inline font-danger" />
+                                    <h:outputText
+                                        styleClass="help-block font-light"
+                                        rendered="#{NavigationForm.showHelp}"
+                                        value="#{field.helpText}" />
+                                </div>
                             </div>
-
-                        <div
-                            class="col-sm-9"
-                            id="field_#{status.index}">
-
-                            <ui:fragment rendered="#{field.type == 'text'}">
-                                <x:inputText
-                                    styleClass="form-control"
-                                    value="#{field.value}"
-                                    required="false"
-                                    id="field_#{status.index}"
-                                    >
-                                    <f:ajax
-                                        execute="@this"
-                                        render="@this"
-                                        event="blur" />
-                                </x:inputText>
-                            </ui:fragment>
-                            
-                            <ui:fragment rendered="#{field.type == 'textarea'}">
-                                <h:inputTextarea
-                                    styleClass="form-control"
-                                    value="#{field.value}"
-                                    required="false"
-                                    style="resize: vertical;min-height:7em;"
-                                    >
-                                    <f:ajax
-                                        execute="@this"
-                                        render="@this"
-                                        event="blur" />
-                                </h:inputTextarea>
-                            </ui:fragment>
-
-							<ui:fragment rendered="#{field.type == 'textReadonly'}">
-                                <x:inputText
-                                    styleClass="form-control"
-                                    value="#{field.value}"
-                                    required="false"
-                                    readonly="true"
-                                    >
-                                </x:inputText>
-                            </ui:fragment>
-                            
-                            <ui:fragment rendered="#{field.type == 'textareaReadonly'}">
-                                <h:inputTextarea
-                                    styleClass="form-control"
-                                    value="#{field.value}"
-                                    required="false"
-                                    readonly="true"
-                                    style="resize: vertical;min-height:7em;"
-                                    >
-                                </h:inputTextarea>
-                            </ui:fragment>
-                            
-                            <ui:fragment rendered="#{field.type == 'list'}">
-                                <h:selectOneMenu
-                                    styleClass="form-control"
-                                    value="#{field.value}">
-                                    <f:ajax
-                                        event="change"
-                                        render="@this" />
-                                    <f:selectItem
-                                        itemValue=""
-                                        itemLabel="#{msgs.bitteAuswaehlen}"
-                                        itemDisabled="true" />
-                                    <f:selectItems
-                                        value="#{field.valueList}"
-                                        var="item"
-                                        itemLabel="#{item}"
-                                        itemValue="#{item}" />
-                                </h:selectOneMenu>
-                            </ui:fragment>
-                            
-                            
-                            <ui:fragment rendered="#{field.type == 'vocabularyList'}">
-                                <h:selectOneMenu
-                                    styleClass="form-control"
-                                    value="#{field.vocabularyValue}">
-                                    <f:ajax
-                                        event="change"
-                                        render="@this" />
-                                    <f:selectItem
-                                        itemValue=""
-                                        itemLabel="#{msgs.bitteAuswaehlen}"
-                                        itemDisabled="false" />
-                                    <f:selectItems
-                                        value="#{field.vocabularyList}"
-                                        var="item"
-                                        itemLabel="#{item}"
-                                        itemValue="#{item}" />
-                                </h:selectOneMenu>
-                            </ui:fragment>
-
-                            <ui:fragment rendered="#{field.type == 'checkbox'}">
-                                <h:selectBooleanCheckbox
-                                    styleClass="form-control checkbox-height-fix"
-                                    style="width: auto;"
-                                    value="#{field.value}">
-                                    <f:ajax
-                                        event="change"
-                                        render="@this"
-                                        tabindex="#{cc.attrs.tabindex}" />
-                                </h:selectBooleanCheckbox>
-                            </ui:fragment>
-
-                            <ui:fragment rendered="#{field.type == 'multivalue'}">
-
-                                <intranda:formOutputText
-                                    label="#{msgs.rolle}"
-                                    field="#{msgs[field.label]}"
-                                    name="role_#{status.index}"
-                                    fieldStyle="form-control" />
-
-                                <intranda:formInputTextAjax
-                                    name="firstname_#{status.index}"
-                                    label="#{msgs.vorname}"
-                                    field="#{field.person.firstname}"
-                                    fieldStyle="form-control"
-                                    required="false"
-                                    execute="@this"
-                                    render="@this" />
-
-                                <intranda:formInputTextAjax
-                                    name="firstname_#{status.index}"
-                                    label="#{msgs.nachname}"
-                                    field="#{field.person.lastname}"
-                                    fieldStyle="form-control"
-                                    required="false"
-                                    execute="@this"
-                                    render="@this" />
-
-                            </ui:fragment>
-                            <h:message for="field_#{status.index}" showDetail="true" styleClass="help-inline font-danger"/>
-                        	<h:outputText styleClass="help-block font-light" rendered="#{NavigationForm.showHelp}" value="#{field.helpText}" />
-                        </div>
-                    </div>
-                    </ui:fragment>
+                        </ui:fragment>
+                    </ui:repeat>
                 </ui:repeat>
 
                 <div class="form-actions">
 
+                                    <h:commandLink
+                                        styleClass="btn btn-primary font-size-s"
+                                        title="#{msgs.duplicate}"
+                                        action="#{AktuelleSchritteForm.myPlugin.openMetadataPopup}">
+                                        <i class="fa fa-plus margin-right-5" />
+                                        <h:outputText value="#{msgs.neuesMetadatumAnlegen}" />
+                                    </h:commandLink>
+
+
                     <h:commandLink
-                        styleClass="btn btn-primary font-size-s"
+                        styleClass="btn btn-primary font-size-s margin-left-5"
                         title="#{msgs.intranda_step_metadata_edition_searchForProcess}"
                         action="#{AktuelleSchritteForm.myPlugin.openPopup}"
                         rendered="#{AktuelleSchritteForm.myPlugin.displayMetadataImportButton}">
@@ -356,6 +379,134 @@
             </div>
         </div>
 
+        <p:dialog
+            id="addMetadata"
+            rendered="#{AktuelleSchritteForm.myPlugin.displayMetadataAddPopup}"
+            header="#{msgs.neuesMetadatumAnlegen}"
+            widgetVar="dlg2"
+            minHeight="40"
+            height="250"
+            draggable="true"
+            modal="true"
+            responsive="true"
+            width="800"
+            closable="true"
+            closeOnEscape="true">
+            <p:ajax
+                event="close"
+                listener="#{AktuelleSchritteForm.myPlugin.handleClose}"
+                update="addMetadata" />
+
+            <h:panelGroup
+                layout="block"
+                id="fields">
+
+                <div class="form-group">
+                    <div class="col-sm-3 control-label">
+                        <label>#{msgs.typ}:</label>
+                    </div>
+                    <div class="col-sm-9">
+                        <h:selectOneMenu
+                            id="mytyp"
+                            styleClass="form-control"
+                            pt:aria-label="#{msgs.typ}"
+                            value="#{AktuelleSchritteForm.myPlugin.newField}"
+                            required="true">
+                            <f:selectItem
+                                itemValue=""
+                                itemLabel="#{msgs.bitteAuswaehlen}" />
+                            <f:selectItems value="#{AktuelleSchritteForm.myPlugin.possibleFields}" />
+                            <f:ajax
+                                render="fields"
+                                execute="@this"></f:ajax>
+                        </h:selectOneMenu>
+
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>#{msgs.wert}:</label>
+                    </div>
+                    <div class="col-sm-9">
+                        <ui:fragment rendered="#{AktuelleSchritteForm.myPlugin.selectedField.type == 'text' or selectedField.type == 'multivalue'}">
+                            <x:inputText
+                                styleClass="form-control"
+                                value="#{AktuelleSchritteForm.myPlugin.newValue}"
+                                required="false">
+                            </x:inputText>
+                        </ui:fragment>
+
+                        <ui:fragment rendered="#{AktuelleSchritteForm.myPlugin.selectedField.type == 'textarea'}">
+                            <h:inputTextarea
+                                styleClass="form-control"
+                                value="#{AktuelleSchritteForm.myPlugin.newValue}"
+                                required="false"
+                                style="resize: vertical;min-height:7em;">
+                            </h:inputTextarea>
+                        </ui:fragment>
+
+
+
+                        <ui:fragment rendered="#{AktuelleSchritteForm.myPlugin.selectedField.type == 'list'}">
+                            <h:selectOneMenu
+                                styleClass="form-control"
+                                value="#{AktuelleSchritteForm.myPlugin.newValue}">
+                                <f:selectItem
+                                    itemValue=""
+                                    itemLabel="#{msgs.bitteAuswaehlen}"
+                                    itemDisabled="true" />
+                                <f:selectItems
+                                    value="#{AktuelleSchritteForm.myPlugin.selectedField.valueList}"
+                                    var="item"
+                                    itemLabel="#{item}"
+                                    itemValue="#{item}" />
+                            </h:selectOneMenu>
+                        </ui:fragment>
+
+
+                        <ui:fragment rendered="#{AktuelleSchritteForm.myPlugin.selectedField.type == 'vocabularyList'}">
+                            <h:selectOneMenu
+                                styleClass="form-control"
+                                value="#{AktuelleSchritteForm.myPlugin.newValue}">
+                                <f:selectItem
+                                    itemValue=""
+                                    itemLabel="#{msgs.bitteAuswaehlen}"
+                                    itemDisabled="false" />
+                                <f:selectItems
+                                    value="#{AktuelleSchritteForm.myPlugin.selectedField.vocabularyList}"
+                                    var="item"
+                                    itemLabel="#{item}"
+                                    itemValue="#{item}" />
+                            </h:selectOneMenu>
+                        </ui:fragment>
+
+                        <ui:fragment rendered="#{AktuelleSchritteForm.myPlugin.selectedField.type == 'checkbox'}">
+                            <h:selectBooleanCheckbox
+                                styleClass="form-control checkbox-height-fix"
+                                style="width: auto;"
+                                value="#{AktuelleSchritteForm.myPlugin.newValue}">
+                            </h:selectBooleanCheckbox>
+                        </ui:fragment>
+                    </div>
+                </div>
+                <hr />
+
+                <div class="row">
+                    <div class="col-sm-12">
+
+                        <h:commandButton
+                            id="addField"
+                            styleClass="btn btn-lightgrey font-size-s pull-right"
+                            type="submit"
+                            action="#{AktuelleSchritteForm.myPlugin.addMetadataField}"
+                            value="#{msgs.nachrichtHinzufuegen}"
+                            role="button">
+                        </h:commandButton>
+                    </div>
+                </div>
+            </h:panelGroup>
+        </p:dialog>
 
         <p:dialog
             id="dialogue"
@@ -409,21 +560,22 @@
                 </div>
             </h:panelGroup>
             <h:panelGroup id="resultList">
-            
-            	<x:outputText id="noHitsFound" styleClass="alert alert-warning block text-center margin-top-regular"
-                	value="#{msgs.NORM_noHits}" rendered="#{AktuelleSchritteForm.myPlugin.processListIsEmpty}"/>
-                                    
+
+                <x:outputText
+                    id="noHitsFound"
+                    styleClass="alert alert-warning block text-center margin-top-regular"
+                    value="#{msgs.NORM_noHits}"
+                    rendered="#{AktuelleSchritteForm.myPlugin.processListIsEmpty}" />
+
                 <h:panelGroup
                     layout="block"
                     rendered="#{!AktuelleSchritteForm.myPlugin.processListIsEmpty}">
-					
+
                     <ui:repeat
                         var="process"
                         value="#{AktuelleSchritteForm.myPlugin.processList}"
                         varStatus="processStatus">
-                        <div
-                            class="row"
-                            >
+                        <div class="row">
                             <h:outputLabel
                                 for="processtitle"
                                 styleClass="col-sm-3"
@@ -440,7 +592,9 @@
                                     styleClass="btn btn-small btn--icon-green"
                                     action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}"
                                     title="#{msgs.intranda_step_metadata_edition_importSelectedMetadata}">
-                                    <i class="fa fa-check" style="color:#fff" />
+                                    <i
+                                        class="fa fa-check"
+                                        style="color: #fff" />
 
                                     <f:setPropertyActionListener
                                         value="#{process}"
@@ -452,7 +606,7 @@
                             var="metadata"
                             value="#{process.metadataFieldList}">
                             <div class="row">
-								<hr style="margin-top: 10px;margin-bottom: 10px;border-top: 1px #eee solid;"/>
+                                <hr style="margin-top: 10px; margin-bottom: 10px; border-top: 1px #eee solid;" />
                                 <div class="col-sm-3">
                                     <h:outputLabel
                                         for="md"
@@ -467,13 +621,13 @@
 
                                 <div class="col-sm-1">
                                     <h:selectBooleanCheckbox
-                                    	style="margin-top:5px; margin-bottom:7px;"
+                                        style="margin-top:5px; margin-bottom:7px;"
                                         value="#{metadata.selected}"
                                         disabled="#{!metadata.whitelisted}" />
                                 </div>
                             </div>
                         </ui:repeat>
-						<hr style="margin-top: 20px;margin-bottom: 20px;border-top: 1px #666 solid;"/>
+                        <hr style="margin-top: 20px; margin-bottom: 20px; border-top: 1px #666 solid;" />
                     </ui:repeat>
 
                 </h:panelGroup>
@@ -510,6 +664,10 @@
 	            var displayPopup = '#{AktuelleSchritteForm.myPlugin.displaySearchPopup}';
 	            if ( displayPopup == 'true' ) {
 	                PF( 'dlg1' ).show();
+	            }
+	            var displayMetadataPopup = '#{AktuelleSchritteForm.myPlugin.displayMetadataAddPopup}';
+	            if ( displayMetadataPopup == 'true' ) {
+	                PF( 'dlg2' ).show();
 	            }
 	            
 	            loadThumbnails();
