@@ -2,7 +2,7 @@
 
 <img src="https://goobi.io/wp-content/uploads/logo_goobi_plugin.png" align="right" style="margin:0 0 20px 20px;" alt="Plugin for Goobi workflow" width="175" height="109">
 
-This is a step plugin to allow the edition of individual metadata fields right inside of an accepted task. It is highly configurable and contains a user interface.
+This is a Step plugin for Goobi workflow which allows the edition of individual metadata fields right inside of an accepted task. It is highly configurable and contains a flexible user interface with the possibility to show thumbnails and to set the representative image as well.
 
 This is a plugin for Goobi workflow, the open source workflow tracking software for digitisation projects. More information about Goobi workflow is available under https://goobi.io. If you want to get in touch with the user community simply go to https://community.goobi.io.
 
