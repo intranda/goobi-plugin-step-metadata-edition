@@ -171,6 +171,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     private boolean displayMetadataImportButton = true;
 
+    @Getter
+    private boolean displayMetadataAddButton = true;
+
     private List<MetadataField> deleteList = new ArrayList<>();
 
     @Getter
@@ -262,8 +265,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         thumbnailSize = myconfig.getInt("thumbnailsize", 200);
         hideEmptyFields = myconfig.getBoolean("hideEmptyFields", true);
 
-        displayImageArea = myconfig.getBoolean("showImages", true);
-        displayMetadataImportButton = myconfig.getBoolean("showImportMetadata", true);
+        displayImageArea = myconfig.getBoolean("showImages", false);
+        displayMetadataImportButton = myconfig.getBoolean("showImportMetadata", false);
+        displayMetadataAddButton = myconfig.getBoolean("showAddMetadata", false);
 
         try {
             if ("master".equalsIgnoreCase(myconfig.getString("imageFolder", null))) {

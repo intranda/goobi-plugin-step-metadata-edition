@@ -101,7 +101,8 @@
         <importfield rulesetName="SizeSourcePrint"  selectable="false"/>
         <importfield rulesetName="SubjectTopic" label="Schlagwort" selectable="true"/>
 
-        <showImages>true</showImages>
-        <showImportMetadata>true</showImportMetadata>
+        <showImages>false</showImages>
+        <showAddMetadata>false</showAddMetadata>
+        <showImportMetadata>false</showImportMetadata>
     </config>
 </config_plugin>

@@ -30,6 +30,10 @@
     overflow: hidden;
     max-height: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
 }
+
+.outputLabelBackground{
+	background-color: #f6f6f6;
+}
 </style>
 
     <h:form
@@ -206,7 +210,8 @@
 
                                 <div
                                     class="col-sm-9"
-                                    id="field_#{status.index}">
+                                    id="field_#{status.index}"
+                                    style="#{configuredField.type == 'multivalue' ? 'padding:0;' : ''}">
 
                                     <ui:fragment rendered="#{configuredField.type == 'text'}">
                                         <x:inputText
@@ -310,7 +315,8 @@
                                             label="#{msgs.rolle}"
                                             field="#{msgs[configuredField.label]}"
                                             name="role_#{status.index}"
-                                            fieldStyle="form-control" />
+                                            fieldStyle="form-control outputLabelBackground"
+                                            style="padding:8px" />
 
                                         <intranda:formInputTextAjax
                                             name="firstname_#{status.index}"
@@ -319,7 +325,8 @@
                                             fieldStyle="form-control"
                                             required="false"
                                             execute="@this"
-                                            render="@this" />
+                                            render="@this" 
+                                            style="padding:8px" />
 
                                         <intranda:formInputTextAjax
                                             name="firstname_#{status.index}"
@@ -328,7 +335,8 @@
                                             fieldStyle="form-control"
                                             required="false"
                                             execute="@this"
-                                            render="@this" />
+                                            render="@this" 
+                                            style="padding:8px" />
 
                                     </ui:fragment>
                                     <h:message
@@ -347,13 +355,14 @@
 
                 <div class="form-actions">
 
-                                    <h:commandLink
-                                        styleClass="btn btn-primary font-size-s"
-                                        title="#{msgs.duplicate}"
-                                        action="#{AktuelleSchritteForm.myPlugin.openMetadataPopup}">
-                                        <i class="fa fa-plus margin-right-5" />
-                                        <h:outputText value="#{msgs.neuesMetadatumAnlegen}" />
-                                    </h:commandLink>
+                    <h:commandLink
+                        styleClass="btn btn-primary font-size-s"
+                        title="#{msgs.duplicate}"
+                        action="#{AktuelleSchritteForm.myPlugin.openMetadataPopup}"
+                        rendered="#{AktuelleSchritteForm.myPlugin.displayMetadataAddButton}">
+                        <i class="fa fa-plus margin-right-5" />
+                        <h:outputText value="#{msgs.neuesMetadatumAnlegen}" />
+                    </h:commandLink>
 
 
                     <h:commandLink
