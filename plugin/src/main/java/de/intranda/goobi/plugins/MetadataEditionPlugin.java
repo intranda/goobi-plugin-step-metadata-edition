@@ -231,7 +231,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 logical = logical.getAllChildren().get(0);
             }
             physical = digitalDocument.getPhysicalDocStruct();
-        } catch (ReadException | PreferencesException | WriteException | IOException | InterruptedException | SwapException | DAOException e1) {
+        } catch (ReadException | PreferencesException | IOException | SwapException e1) {
             log.error(e1);
         }
 
@@ -275,7 +275,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             } else {
                 imageFolderName = process.getImagesTifDirectory(true);
             }
-        } catch (IOException | InterruptedException | SwapException | DAOException e3) {
+        } catch (IOException | SwapException | DAOException e3) {
             log.error(e3);
         }
         initDisplayFields(myconfig);
@@ -530,7 +530,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
                     allImages.add(currentImage);
                     order++;
-                } catch (IOException | InterruptedException | SwapException | DAOException e) {
+                } catch (IOException | SwapException | DAOException e) {
                     log.error("Error initializing image " + imagename, e);
                 }
             }
@@ -577,7 +577,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 otherLogical = otherLogical.getAllChildren().get(0);
             }
 
-        } catch (ReadException | PreferencesException | WriteException | IOException | InterruptedException | SwapException | DAOException e) {
+        } catch (ReadException | PreferencesException | IOException | SwapException e) {
             log.error(e);
         }
 
@@ -791,7 +791,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         try {
             process.writeMetadataFile(fileformat);
-        } catch (WriteException | PreferencesException | IOException | InterruptedException | SwapException | DAOException e) {
+        } catch (WriteException | PreferencesException | IOException | SwapException e) {
             log.error(e);
         }
     }
