@@ -235,8 +235,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             log.error(e1);
         }
 
-        List<Metadata> lstMetadata = physical.getAllMetadata();
-        if (physical != null) {
+        if (physical != null &&  physical.getAllMetadata() != null) {
+            List<Metadata> lstMetadata = physical.getAllMetadata();
             for (Metadata md : lstMetadata) {
                 if (md.getType().getName().equals("_representative")) {
                     try {
