@@ -236,15 +236,17 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         }
 
         List<Metadata> lstMetadata = physical.getAllMetadata();
-        for (Metadata md : lstMetadata) {
-            if (md.getType().getName().equals("_representative")) {
-                try {
-                    Integer value = Integer.parseInt(md.getValue());
-                    if (value > 0) {
-                        imageIndex = value - 1;
+        if (physical != null) {
+            for (Metadata md : lstMetadata) {
+                if (md.getType().getName().equals("_representative")) {
+                    try {
+                        Integer value = Integer.parseInt(md.getValue());
+                        if (value > 0) {
+                            imageIndex = value - 1;
+                        }
+                    } catch (Exception e) {
+                        log.error(e);
                     }
-                } catch (Exception e) {
-                    log.error(e);
                 }
             }
         }
