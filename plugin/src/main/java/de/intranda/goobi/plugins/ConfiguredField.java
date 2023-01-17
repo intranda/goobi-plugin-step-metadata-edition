@@ -68,25 +68,28 @@ public class ConfiguredField {
 
     private List<MetadataField> metadataFields = new ArrayList<>();
 
+    private boolean onlyEmptyReadOnlyFields;
+
     public void addMetadataField(MetadataField mf) {
-        metadataFields.add(mf);
+        this.metadataFields.add(mf);
     }
 
     public void deleteMetadataField(MetadataField mf) {
         // TODO delete metadata value/Person/Property
-        metadataFields.remove(mf);
+        this.metadataFields.remove(mf);
     }
 
     public boolean isShowField() {
         // show only filled read only fields
-        if ("textReadonly".equals(type) || "textareaReadonly".equals(type)) {
-            for (MetadataField mf : metadataFields) {
+        if ("textReadonly".equals(this.type) || "textareaReadonly".equals(this.type) || !this.onlyEmptyReadOnlyFields) {
+            for (MetadataField mf : this.metadataFields) {
                 if (StringUtils.isNotBlank(mf.getValue())) {
                     return true;
                 }
             }
             return false;
-        } return true;
+        }
+        return true;
     }
 
 }
