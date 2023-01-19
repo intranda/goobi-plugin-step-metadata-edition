@@ -31,8 +31,10 @@
         <!-- size of the thumbnail images -->
         <thumbnailsize>200</thumbnailsize>
 
-        <!-- define if you want to see empty fields for read only values -->
-        <hideEmptyFields>true</hideEmptyFields>
+        <!-- If true and the attribute onlyEmptyReadOnlyFields is set to false all empty fields in the plugin are hidden.
+             If the attribute onlyEmptyReadOnlyFields is true also, only these ones are not rendered.
+             The default value of onlyEmptyReadOnlyFields is true -->
+        <hideEmptyFields onlyEmptyReadOnlyFields="true">true</hideEmptyFields>
 
         <!-- which image folder should be used? Possible values are master/media, default is media -->
         <imageFolder>media</imageFolder>
