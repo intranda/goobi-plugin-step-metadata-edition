@@ -83,7 +83,7 @@ public class ConfiguredField {
         // show only filled read only fields
         if ("textReadonly".equals(this.type) || "textareaReadonly".equals(this.type) || !this.onlyEmptyReadOnlyFields) {
             for (MetadataField mf : this.metadataFields) {
-                if (StringUtils.isNotBlank(mf.getValue())) {
+                if (StringUtils.isNotBlank(mf.getValue()) || mf.getPerson() != null) {
                     return true;
                 }
             }
