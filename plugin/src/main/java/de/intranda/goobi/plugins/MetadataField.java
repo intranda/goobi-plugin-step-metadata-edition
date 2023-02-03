@@ -22,7 +22,7 @@ public class MetadataField {
     private Processproperty property;
 
     @NonNull
-    private ConfiguredField configuredField;
+    private MetadataConfiguredField configuredField;
 
 
     public void setVocabularyValue(String value) {

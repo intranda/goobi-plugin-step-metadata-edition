@@ -131,7 +131,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private int imageIndex = 0;
 
     @Getter
-    private List<ConfiguredField> metadataFieldList = new ArrayList<>();
+    private List<MetadataConfiguredField> metadataFieldList = new ArrayList<>();
 
     @Getter
     @Setter
@@ -186,7 +186,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private String newField;
 
     @Getter
-    private ConfiguredField selectedField;
+    private MetadataConfiguredField selectedField;
 
     @Getter
     @Setter
@@ -339,7 +339,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 vocabularyName = field.getString("/vocabularyName");
                 List<String> fields = Arrays.asList(field.getStringArray("/searchParameter"));
 
-                if (fields == null) {
+                if (fields == null || fields.isEmpty()) {
                     Vocabulary currentVocabulary = VocabularyManager.getVocabularyByTitle(vocabularyName);
                     vocabularyUrl = getVocabularyBaseName() + currentVocabulary.getId();
                     if (currentVocabulary != null) {
@@ -370,7 +370,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         }
                     }
                     List<VocabRecord> records = VocabularyManager.findRecords(vocabularyName, vocabularySearchFields);
-                    if (records != null && records.size() > 0) {
+                    if (records != null && !records.isEmpty()) {
                         Collections.sort(records);
                         vocabularyRecords = new ArrayList<>(records.size());
                         for (VocabRecord vr : records) {
@@ -389,7 +389,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     }
                 }
             }
-            ConfiguredField metadataField = new ConfiguredField(source, name, type, label, required, helpText, searchable);
+            MetadataConfiguredField metadataField = new MetadataConfiguredField(source, name, type, label, required, helpText, searchable);
             metadataField.setStructType(structType);
             metadataField.setDefaultValue(defaultValue);
             metadataField.setValidationRegex(validationRegex);
@@ -405,7 +405,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             this.metadataFieldList.add(metadataField);
         }
 
-        for (ConfiguredField cf : this.metadataFieldList) {
+        for (MetadataConfiguredField cf : this.metadataFieldList) {
             boolean found = false;
             if ("property".contains(cf.getSource())) {
                 for (Processproperty prop : properties) {
@@ -695,7 +695,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     public void saveAllChanges() {
 
         boolean totalValid = true;
-        for (ConfiguredField mf : this.metadataFieldList) {
+        for (MetadataConfiguredField mf : this.metadataFieldList) {
             if (mf.getRequired().booleanValue()) {
                 boolean fieldValid = false;
                 for (MetadataField metadataField : mf.getMetadataFields()) {
@@ -743,7 +743,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         }
 
         // save properties
-        for (ConfiguredField cf : this.metadataFieldList) {
+        for (MetadataConfiguredField cf : this.metadataFieldList) {
             for (MetadataField mf : cf.getMetadataFields()) {
                 if (mf.getProperty() != null) {
                     PropertyManager.saveProcessProperty(mf.getProperty());
@@ -975,7 +975,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     // unused
     public void addField() {
-        ConfiguredField field = this.currentField.getConfiguredField();
+        MetadataConfiguredField field = this.currentField.getConfiguredField();
         if (field != null) {
             MetadataField metadataField = new MetadataField(this.currentField.getConfiguredField());
             field.addMetadataField(metadataField);
@@ -1021,7 +1021,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void deleteField() {
         if (this.currentField != null) {
-            for (ConfiguredField cf : this.metadataFieldList) {
+            for (MetadataConfiguredField cf : this.metadataFieldList) {
                 if (cf.getSource().equals(this.currentField.getConfiguredField().getSource())) {
                     cf.getMetadataFields().remove(this.currentField);
                 }
@@ -1033,7 +1033,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public List<SelectItem> getPossibleFields() {
         List<SelectItem> answer = new ArrayList<>();
-        for (ConfiguredField cf : this.metadataFieldList) {
+        for (MetadataConfiguredField cf : this.metadataFieldList) {
             if ((cf.isRepeatable() || cf.getMetadataFields().isEmpty())
                     && (!"textReadonly".equals(cf.getType()) && !"textareaReadonly".equals(cf.getType()))) {
                 answer.add(new SelectItem(cf.getName(), cf.getLabel()));
@@ -1119,7 +1119,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void setNewField(String newField) {
         if (this.newField == null || !this.newField.equals(newField)) {
-            for (ConfiguredField cf : this.metadataFieldList) {
+            for (MetadataConfiguredField cf : this.metadataFieldList) {
                 if (cf.getName().equals(newField)) {
                     this.selectedField = cf;
                     break;

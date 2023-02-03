@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 @RequiredArgsConstructor
-public class ConfiguredField {
+public class MetadataConfiguredField {
 
     // metadata, property or person
     @NonNull
