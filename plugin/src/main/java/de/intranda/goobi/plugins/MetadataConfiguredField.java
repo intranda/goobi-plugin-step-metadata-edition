@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import ugh.dl.Person;
 
 @Data
 @RequiredArgsConstructor
@@ -83,7 +84,13 @@ public class MetadataConfiguredField {
         // show only filled read only fields
         if ("textReadonly".equals(this.type) || "textareaReadonly".equals(this.type) || !this.onlyEmptyReadOnlyFields) {
             for (MetadataField mf : this.metadataFields) {
-                if (StringUtils.isNotBlank(mf.getValue()) || mf.getPerson() != null) {
+                if (mf.getPerson()!=null) {
+                    Person p = mf.getPerson();
+                    if (StringUtils.isNotBlank(p.getLastname()) || StringUtils.isNotBlank(p.getFirstname())) {
+                        return true;
+                    }
+                }
+                else if (StringUtils.isNotBlank(mf.getValue())) {
                     return true;
                 }
             }
