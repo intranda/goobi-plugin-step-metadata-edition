@@ -426,7 +426,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     property.setProcessId(this.process.getId());
                     property.setProzess(this.process);
                     property.setTitel(cf.getName());
-                    property.setType(PropertyType.String);
+                    property.setType(PropertyType.STRING);
                     property.setWert(cf.getDefaultValue());
                     this.process.getEigenschaften().add(property);
                     MetadataField mf = new MetadataField(cf);
@@ -987,7 +987,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 property.setProcessId(this.process.getId());
                 property.setProzess(this.process);
                 property.setTitel(field.getName());
-                property.setType(PropertyType.String);
+                property.setType(PropertyType.STRING);
                 property.setWert(this.currentField.getProperty().getWert());
                 this.process.getEigenschaften().add(property);
                 metadataField.setProperty(property);
@@ -1055,7 +1055,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 property.setProcessId(this.process.getId());
                 property.setProzess(this.process);
                 property.setTitel(this.selectedField.getName());
-                property.setType(PropertyType.String);
+                property.setType(PropertyType.STRING);
                 property.setWert(this.selectedField.getDefaultValue());
                 this.process.getEigenschaften().add(property);
                 mf.setProperty(property);
