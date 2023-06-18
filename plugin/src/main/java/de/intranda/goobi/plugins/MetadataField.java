@@ -15,7 +15,6 @@ import ugh.dl.Person;
 @RequiredArgsConstructor
 public class MetadataField {
 
-
     // holds the actual object
     private Metadata metadata;
     private Person person;
@@ -23,7 +22,6 @@ public class MetadataField {
 
     @NonNull
     private MetadataConfiguredField configuredField;
-
 
     public void setVocabularyValue(String value) {
         if (StringUtils.isNotBlank(value)) {
@@ -74,6 +72,10 @@ public class MetadataField {
             return property.getWert();
         }
         return null;
+    }
+
+    public String getHelpText() {
+        return configuredField.getHelpText();
     }
 
 }
