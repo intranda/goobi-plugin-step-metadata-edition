@@ -60,13 +60,15 @@
     <h:form
         prependId="false"
         id="metadataForm">
-
+ <div class="row" style="--bs-gutter-x: 0;">
+                
         <!-- THUMBNAIL BOX -->
         <ui:fragment rendered="#{AktuelleSchritteForm.myPlugin.displayImageArea}">
            <intranda:box
                 boxType="neutral"
                 boxTitle="false"
                 boxForm="false"
+                boxPadding="false"
                 boxClass="mb-3">
             
                 <intranda:boxTitle
@@ -142,6 +144,9 @@
         </ui:fragment>
         <!-- // THUMBNAIL BOX -->
 
+
+            
+                </div>
 
         <!-- PROPERTY BOX -->
         <intranda:box
