@@ -427,8 +427,11 @@
                 listener="#{AktuelleSchritteForm.myPlugin.handleClose}"
                 update="addMetadata" />
 
-
-            <div class="box box--no-padding form-box">
+           <h:panelGroup
+                layout="block"
+                id="fields"
+                styleClass="box box--no-padding form-box">
+           
                 <div class="box__content">
                     <div class="box__body">
                         
@@ -537,7 +540,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </h:panelGroup>
         </p:dialog>
         <!-- // MODAL TO ADD METADATA -->
 
