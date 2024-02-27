@@ -76,7 +76,6 @@ public class MetadataConfiguredField {
     }
 
     public void deleteMetadataField(MetadataField mf) {
-        // TODO delete metadata value/Person/Property
         this.metadataFields.remove(mf);
     }
 
@@ -84,13 +83,12 @@ public class MetadataConfiguredField {
         // show only filled read only fields
         if ("textReadonly".equals(this.type) || "textareaReadonly".equals(this.type) || !this.onlyEmptyReadOnlyFields) {
             for (MetadataField mf : this.metadataFields) {
-                if (mf.getPerson()!=null) {
+                if (mf.getPerson() != null) {
                     Person p = mf.getPerson();
                     if (StringUtils.isNotBlank(p.getLastname()) || StringUtils.isNotBlank(p.getFirstname())) {
                         return true;
                     }
-                }
-                else if (StringUtils.isNotBlank(mf.getValue())) {
+                } else if (StringUtils.isNotBlank(mf.getValue())) {
                     return true;
                 }
             }

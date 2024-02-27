@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
@@ -88,6 +89,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
      * Create and publish a documentation for this plugin
      */
 
+    private static final long serialVersionUID = -2900229011356745663L;
+
     @Getter
     private Step step;
     private String returnPath;
@@ -105,14 +108,13 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     // metadata
     private Prefs prefs;
-    private Fileformat fileformat;
-    private DigitalDocument digitalDocument;
+    private transient Fileformat fileformat;
     private DocStruct logical;
     private DocStruct anchor;
     private DocStruct physical;
 
     @Getter
-    private List<Image> allImages = new ArrayList<>();
+    private transient List<Image> allImages = new ArrayList<>();
 
     @Getter
     private int thumbnailSize = 200;
@@ -126,30 +128,30 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private boolean pagesRTL;
     @Getter
     @Setter
-    private Image image = null;
+    private transient Image image = null;
 
-    private int imageIndex = 0;
+    private Integer imageIndex = null;
 
     @Getter
-    private List<MetadataConfiguredField> metadataFieldList = new ArrayList<>();
+    private transient List<MetadataConfiguredField> metadataFieldList = new ArrayList<>();
 
     @Getter
     @Setter
-    private MetadataField currentField;
+    private transient MetadataField currentField;
 
     @Getter
     @Setter
     private String searchValue;
     @Getter
     @Setter
-    private List<ProcessMetadata> processList;
+    private transient List<ProcessMetadata> processList;
 
-    private Map<String, WhiteListItem> metadataWhiteListToImport = new LinkedHashMap<>();
+    private transient Map<String, WhiteListItem> metadataWhiteListToImport = new LinkedHashMap<>();
     private boolean preselectFields;
 
     @Getter
     @Setter
-    private ProcessMetadata selectedProcess;
+    private transient ProcessMetadata selectedProcess;
 
     private SubnodeConfiguration myconfig = null;
 
@@ -177,7 +179,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     private boolean displayMetadataAddButton = true;
 
-    private List<MetadataField> deleteList = new ArrayList<>();
+    private transient List<MetadataField> deleteList = new ArrayList<>();
 
     @Getter
     @Setter
@@ -186,7 +188,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private String newField;
 
     @Getter
-    private MetadataConfiguredField selectedField;
+    private transient MetadataConfiguredField selectedField;
 
     @Getter
     @Setter
@@ -227,13 +229,13 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         this.prefs = this.process.getRegelsatz().getPreferences();
         try {
             this.fileformat = this.process.readMetadataFile();
-            this.digitalDocument = this.fileformat.getDigitalDocument();
-            this.logical = this.digitalDocument.getLogicalDocStruct();
+            DigitalDocument digitalDocument = fileformat.getDigitalDocument();
+            this.logical = digitalDocument.getLogicalDocStruct();
             if (this.logical.getType().isAnchor()) {
                 this.anchor = this.logical;
                 this.logical = this.logical.getAllChildren().get(0);
             }
-            this.physical = this.digitalDocument.getPhysicalDocStruct();
+            this.physical = digitalDocument.getPhysicalDocStruct();
         } catch (ReadException | PreferencesException | IOException | SwapException e1) {
             log.error(e1);
         }
@@ -260,6 +262,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     try {
                         this.pagesRTL = Boolean.parseBoolean(md.getValue());
                     } catch (Exception e) {
+                        // do nothing
                     }
                 }
             }
@@ -315,7 +318,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             // each field has source, name, type, required attributes
             String source = field.getString("@source");
             String name = field.getString("@name");
-            String type = field.getString("@type");
+            String fieldType = field.getString("@type");
             String label = field.getString("@label", name);
             boolean required = field.getBoolean("@required", false);
             String structType = field.getString("@structType", "child");
@@ -335,7 +338,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             String vocabularyName = null;
             String vocabularyUrl = null;
             List<SelectItem> vocabularyRecords = null;
-            if ("vocabularyList".equals(type)) {
+            if ("vocabularyList".equals(fieldType)) {
                 vocabularyName = field.getString("/vocabularyName");
                 List<String> fields = Arrays.asList(field.getStringArray("/searchParameter"));
 
@@ -389,7 +392,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     }
                 }
             }
-            MetadataConfiguredField metadataField = new MetadataConfiguredField(source, name, type, label, required, helpText, searchable);
+            MetadataConfiguredField metadataField = new MetadataConfiguredField(source, name, fieldType, label, required, helpText, searchable);
             metadataField.setStructType(structType);
             metadataField.setDefaultValue(defaultValue);
             metadataField.setValidationRegex(validationRegex);
@@ -517,7 +520,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     @Override
     public HashMap<String, StepReturnValue> validate() {
-        return null;
+        return null; //NOSONAR
     }
 
     @Override
@@ -541,6 +544,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     log.error("Error initializing image " + imagename, e);
                 }
             }
+            if (!imageNameList.isEmpty() && imageIndex == null) {
+                imageIndex = 0;
+            }
         }
         setImageIndex(this.imageIndex);
     }
@@ -553,16 +559,18 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         return this.pagesRTL ? "rtl" : "ltr";
     }
 
-    public void setImageIndex(int imageIndex) {
-        this.imageIndex = imageIndex;
-        if (this.imageIndex < 0) {
-            this.imageIndex = 0;
-        }
-        if (this.imageIndex >= getSizeOfImageList()) {
-            this.imageIndex = getSizeOfImageList() - 1;
-        }
-        if (this.imageIndex >= 0) {
-            setImage(this.allImages.get(this.imageIndex));
+    public void setImageIndex(Integer imageIndex) {
+        if (imageIndex != null) {
+            this.imageIndex = imageIndex;
+            if (this.imageIndex < 0) {
+                this.imageIndex = 0;
+            }
+            if (this.imageIndex >= getSizeOfImageList()) {
+                this.imageIndex = getSizeOfImageList() - 1;
+            }
+            if (this.imageIndex >= 0) {
+                setImage(this.allImages.get(this.imageIndex));
+            }
         }
     }
 
@@ -631,10 +639,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                             personToImport = person;
                             break;
                         }
-                    } else if (StringUtils.isNotBlank(person.getFirstname()) && pmf.getValue().equals(person.getFirstname())) {
-                        personToImport = person;
-                        break;
-                    } else if (pmf.getValue().equals(person.getLastname())) {
+                    } else if ((StringUtils.isNotBlank(person.getFirstname()) && pmf.getValue().equals(person.getFirstname()))
+                            || pmf.getValue().equals(person.getLastname())) {
                         personToImport = person;
                         break;
                     }
@@ -767,30 +773,33 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         md.setValue(String.valueOf(this.pagesRTL));
                         this.logical.addMetadata(md);
                     } catch (MetadataTypeNotAllowedException e) {
-
+                        // do nothing
                     }
                 }
             }
         }
         // save representative image
-        boolean match = false;
-        if (this.physical != null && this.physical.getAllMetadata() != null && this.physical.getAllMetadata().size() > 0) {
-            for (Metadata md : this.physical.getAllMetadata()) {
-                if ("_representative".equals(md.getType().getName())) {
-                    md.setValue(String.valueOf(this.imageIndex + 1));
-                    match = true;
+        if (imageIndex != null) {
+            boolean match = false;
+            if (this.physical != null && this.physical.getAllMetadata() != null && !this.physical.getAllMetadata().isEmpty()) {
+                for (Metadata md : this.physical.getAllMetadata()) {
+                    if ("_representative".equals(md.getType().getName())) {
+                        md.setValue(String.valueOf(this.imageIndex + 1));
+                        match = true;
+                    }
                 }
             }
-        }
-        if (!match) {
-            MetadataType mdt = this.prefs.getMetadataTypeByName("_representative");
-            try {
-                Metadata md = new Metadata(mdt);
-                Integer value = this.imageIndex + 1;
-                md.setValue(String.valueOf(value));
+            if (!match) {
+                MetadataType mdt = this.prefs.getMetadataTypeByName("_representative");
+                try {
+                    Metadata md = new Metadata(mdt);
+                    Integer value = this.imageIndex + 1;
+                    md.setValue(String.valueOf(value));
 
-                this.physical.addMetadata(md);
-            } catch (MetadataTypeNotAllowedException e) {
+                    this.physical.addMetadata(md);
+                } catch (MetadataTypeNotAllowedException e) {
+                    // do nothing
+                }
             }
         }
 
@@ -810,9 +819,10 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         this.processList = new ArrayList<>(foundProcessIds.size());
 
-        for (Integer id : foundProcessIds.keySet()) {
-            List<StringPair> metadataList = MetadataManager.getMetadata(id);
-            ProcessMetadata pm = new ProcessMetadata(id, foundProcessIds.get(id), metadataList, this.metadataWhiteListToImport, this.preselectFields);
+        for (Entry<Integer, String> entry : foundProcessIds.entrySet()) {
+            List<StringPair> metadataList = MetadataManager.getMetadata(entry.getKey());
+            ProcessMetadata pm =
+                    new ProcessMetadata(entry.getKey(), entry.getValue(), metadataList, this.metadataWhiteListToImport, this.preselectFields);
             this.processList.add(pm);
         }
     }
@@ -845,7 +855,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         return Collections.emptyMap();
     }
 
-    public static ResultSetHandler<Map<Integer, String>> resultSetToMapHandler = new ResultSetHandler<Map<Integer, String>>() {
+    public static final ResultSetHandler<Map<Integer, String>> resultSetToMapHandler = new ResultSetHandler<Map<Integer, String>>() {
         @Override
         public Map<Integer, String> handle(ResultSet rs) throws SQLException {
             Map<Integer, String> answer = new HashMap<>();
@@ -856,9 +866,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     answer.put(processid, processTitle);
                 }
             } finally {
-                if (rs != null) {
-                    rs.close();
-                }
+                rs.close();
             }
             return answer;
         }
@@ -915,6 +923,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 searchQuery.append("\" ");
 
                 break;
+            default:
+
         }
         // addd configured suffix
         String suffix = this.currentField.getConfiguredField().getSearchSuffix();
@@ -930,16 +940,17 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         this.processList = new ArrayList<>(foundProcessIds.size());
 
-        for (Integer id : foundProcessIds.keySet()) {
-            List<StringPair> metadataList = MetadataManager.getMetadata(id);
-            ProcessMetadata pm = new ProcessMetadata(id, foundProcessIds.get(id), metadataList, this.metadataWhiteListToImport, this.preselectFields);
+        for (Entry<Integer, String> entry : foundProcessIds.entrySet()) {
+            List<StringPair> metadataList = MetadataManager.getMetadata(entry.getKey());
+            ProcessMetadata pm =
+                    new ProcessMetadata(entry.getKey(), entry.getValue(), metadataList, this.metadataWhiteListToImport, this.preselectFields);
             this.processList.add(pm);
         }
         this.displaySearchOption = false;
         this.displaySearchPopup = true;
     }
 
-    public void handleClose(CloseEvent event) {
+    public void handleClose(CloseEvent event) { //NOSONAR
         this.displaySearchPopup = false;
         this.displayMetadataAddPopup = false;
     }
