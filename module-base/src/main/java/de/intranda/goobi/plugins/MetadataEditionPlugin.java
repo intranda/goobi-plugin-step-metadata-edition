@@ -1,28 +1,27 @@
 package de.intranda.goobi.plugins;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-
+import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
+import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.Helper;
+import de.sub.goobi.helper.NIOFileUtils;
+import de.sub.goobi.helper.StorageProvider;
+import de.sub.goobi.helper.enums.PropertyType;
+import de.sub.goobi.helper.exceptions.DAOException;
+import de.sub.goobi.helper.exceptions.SwapException;
+import de.sub.goobi.metadaten.Image;
+import de.sub.goobi.persistence.managers.MetadataManager;
+import de.sub.goobi.persistence.managers.MySQLHelper;
+import de.sub.goobi.persistence.managers.ProcessManager;
+import de.sub.goobi.persistence.managers.PropertyManager;
+import io.goobi.vocabulary.exchange.FieldDefinition;
+import io.goobi.vocabulary.exchange.VocabularySchema;
+import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
+import io.goobi.workflow.api.vocabulary.jsfwrapper.JSFVocabularyRecord;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
+import net.xeoh.plugins.base.annotations.PluginImplementation;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
@@ -38,31 +37,7 @@ import org.goobi.production.enums.PluginType;
 import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.flow.statistics.hibernate.FilterHelper;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
-import org.goobi.vocabulary.Field;
-import org.goobi.vocabulary.VocabRecord;
-import org.goobi.vocabulary.Vocabulary;
 import org.primefaces.event.CloseEvent;
-
-import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
-import de.sub.goobi.config.ConfigPlugins;
-import de.sub.goobi.helper.FacesContextHelper;
-import de.sub.goobi.helper.Helper;
-import de.sub.goobi.helper.NIOFileUtils;
-import de.sub.goobi.helper.StorageProvider;
-import de.sub.goobi.helper.enums.PropertyType;
-import de.sub.goobi.helper.exceptions.DAOException;
-import de.sub.goobi.helper.exceptions.SwapException;
-import de.sub.goobi.metadaten.Image;
-import de.sub.goobi.persistence.managers.MetadataManager;
-import de.sub.goobi.persistence.managers.MySQLHelper;
-import de.sub.goobi.persistence.managers.ProcessManager;
-import de.sub.goobi.persistence.managers.PropertyManager;
-import de.sub.goobi.persistence.managers.VocabularyManager;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
-import net.xeoh.plugins.base.annotations.PluginImplementation;
 import ugh.dl.DigitalDocument;
 import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
@@ -74,6 +49,25 @@ import ugh.exceptions.MetadataTypeNotAllowedException;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
 import ugh.exceptions.WriteException;
+
+import javax.faces.model.SelectItem;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Log4j2
 @PluginImplementation
@@ -193,6 +187,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     @Setter
     private boolean displayMetadataAddPopup = false;
+
+
+    private VocabularyAPIManager vocabularyAPI = VocabularyAPIManager.getInstance();
 
     @Override
     public PluginReturnValue run() {
@@ -343,53 +340,50 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 List<String> fields = Arrays.asList(field.getStringArray("/searchParameter"));
 
                 if (fields == null || fields.isEmpty()) {
-                    Vocabulary currentVocabulary = VocabularyManager.getVocabularyByTitle(vocabularyName);
-                    vocabularyUrl = getVocabularyBaseName() + currentVocabulary.getId();
-                    if (currentVocabulary != null) {
-                        VocabularyManager.getAllRecords(currentVocabulary);
-                        List<VocabRecord> recordList = currentVocabulary.getRecords();
-                        Collections.sort(recordList);
-                        vocabularyRecords = new ArrayList<>(recordList.size());
-                        if (currentVocabulary != null && currentVocabulary.getId() != null) {
-                            for (VocabRecord vr : recordList) {
-                                for (Field f : vr.getFields()) {
-                                    if (f.getDefinition().isMainEntry()) {
-                                        vocabularyRecords.add(new SelectItem(String.valueOf(vr.getId()), f.getValue()));
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    io.goobi.vocabulary.exchange.Vocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                    vocabularyUrl = vocabulary.get_links().get("self").getHref();
+
+                    // Assume there are not than 1000 hits, otherwise it is not useful anyway..
+                    List<JSFVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords().list(vocabulary.getId(), Optional.of(1000), Optional.empty()).getContent();
+
+                    vocabularyRecords = recordList.stream()
+                            .map(r -> new SelectItem(String.valueOf(r.getId()), r.getMainValue()))
+                            .collect(Collectors.toList());
                 } else {
-                    List<StringPair> vocabularySearchFields = new ArrayList<>();
-                    for (String fieldname : fields) {
-                        String[] parts = fieldname.trim().split("=");
-                        if (parts.length > 1) {
-                            String fieldName = parts[0];
-                            String value = parts[1];
-                            StringPair sp = new StringPair(fieldName, value);
-                            vocabularySearchFields.add(sp);
-                        }
+                    if (fields.size() > 1) {
+                        Helper.setFehlerMeldung("vocabularyList with multiple fields is not supported right now");
+                        return;
                     }
-                    List<VocabRecord> records = VocabularyManager.findRecords(vocabularyName, vocabularySearchFields);
-                    if (records != null && !records.isEmpty()) {
-                        Collections.sort(records);
-                        vocabularyRecords = new ArrayList<>(records.size());
-                        for (VocabRecord vr : records) {
 
-                            if (StringUtils.isBlank(vocabularyUrl)) {
-                                vocabularyUrl = getVocabularyBaseName() + vr.getVocabularyId();
-                            }
-
-                            for (Field f : vr.getFields()) {
-                                if (f.getDefinition().isMainEntry()) {
-                                    vocabularyRecords.add(new SelectItem(String.valueOf(vr.getId()), f.getValue()));
-                                    break;
-                                }
-                            }
-                        }
+                    String[] parts = fields.get(0).trim().split("=");
+                    if (parts.length != 2) {
+                        Helper.setFehlerMeldung("Wrong field format");
+                        return;
                     }
+
+                    String searchFieldName = parts[0];
+                    String searchFieldValue = parts[1];
+
+                    io.goobi.vocabulary.exchange.Vocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                    vocabularyUrl = vocabulary.get_links().get("self").getHref();
+                    VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
+                    Optional<FieldDefinition> searchField = schema.getDefinitions().stream()
+                            .filter(d -> d.getName().equals(searchFieldName))
+                            .findFirst();
+
+                    if (searchField.isEmpty()) {
+                        Helper.setFehlerMeldung("Field " + searchFieldName + " not found in vocabulary " + vocabulary.getName());
+                        return;
+                    }
+
+                    // Assume there are not than 1000 hits, otherwise it is not useful anyway..
+                    List<JSFVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords()
+                            .search(vocabulary.getId(), searchField.get().getId() + ":" + searchFieldValue)
+                            .getContent();
+
+                    vocabularyRecords = recordList.stream()
+                            .map(r -> new SelectItem(String.valueOf(r.getId()), r.getMainValue()))
+                            .collect(Collectors.toList());
                 }
             }
             MetadataConfiguredField metadataField = new MetadataConfiguredField(source, name, fieldType, label, required, helpText, searchable);
@@ -968,20 +962,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         this.displaySearchPopup = false;
         this.displayMetadataAddPopup = true;
-    }
-
-    private String getVocabularyBaseName() {
-        FacesContext context = FacesContextHelper.getCurrentFacesContext();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-        String contextPath = request.getContextPath();
-        String scheme = request.getScheme(); // http
-        String serverName = request.getServerName(); // hostname.com
-        int serverPort = request.getServerPort(); // 80
-        String reqUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
-        Client client = ClientBuilder.newClient();
-        WebTarget base = client.target(reqUrl);
-        WebTarget vocabularyBase = base.path("api").path("vocabulary");
-        return vocabularyBase.path("records").getUri().toString() + "/";
     }
 
     // unused
