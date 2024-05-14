@@ -41,18 +41,20 @@ public class MetadataField {
     }
 
     public String getVocabularyValue() {
-        String label = "";
+        String label;
         if (metadata != null) {
             label = metadata.getValue();
         } else if (property != null) {
             label = property.getWert();
+        } else {
+            label = "";
         }
         if (StringUtils.isNotBlank(label)) {
-            for (SelectItem item : configuredField.getVocabularyList()) {
-                if (label.equals(item.getLabel())) {
-                    return (String) item.getValue();
-                }
-            }
+            return configuredField.getVocabularyList().stream()
+                    .filter(s -> label.equals(s.getLabel()))
+                    .map(s -> (String) s.getValue())
+                    .findFirst()
+                    .orElse(null);
         }
         return null;
     }
