@@ -343,8 +343,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     io.goobi.vocabulary.exchange.Vocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
                     vocabularyUrl = vocabulary.get_links().get("self").getHref();
 
-                    // Assume there are not than 1000 hits, otherwise it is not useful anyway..
-                    List<JSFVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords().list(vocabulary.getId(), Optional.of(1000), Optional.empty()).getContent();
+                    List<JSFVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords().all(vocabulary.getId());
 
                     vocabularyRecords = recordList.stream()
                             .map(r -> new SelectItem(String.valueOf(r.getId()), r.getMainValue()))
