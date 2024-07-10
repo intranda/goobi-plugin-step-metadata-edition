@@ -29,7 +29,7 @@ public class MetadataField {
                 if (value.equals(item.getValue())) {
                     if (metadata != null) {
                         metadata.setValue(item.getLabel());
-                        metadata.setAutorityFile(configuredField.getVocabularyName(), configuredField.getVocabularyUrl(),
+                        metadata.setAuthorityFile(configuredField.getVocabularyName(), configuredField.getVocabularyUrl(),
                                 configuredField.getVocabularyUrl() + "/" + value);
                     } else if (property != null) {
                         property.setWert(item.getLabel());
