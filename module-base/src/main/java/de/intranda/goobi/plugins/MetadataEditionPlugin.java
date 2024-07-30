@@ -1,5 +1,64 @@
 package de.intranda.goobi.plugins;
 
+import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
+import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.FacesContextHelper;
+import de.sub.goobi.helper.Helper;
+import de.sub.goobi.helper.NIOFileUtils;
+import de.sub.goobi.helper.StorageProvider;
+import de.sub.goobi.helper.enums.PropertyType;
+import de.sub.goobi.helper.exceptions.DAOException;
+import de.sub.goobi.helper.exceptions.SwapException;
+import de.sub.goobi.metadaten.Image;
+import de.sub.goobi.persistence.managers.MetadataManager;
+import de.sub.goobi.persistence.managers.MySQLHelper;
+import de.sub.goobi.persistence.managers.ProcessManager;
+import de.sub.goobi.persistence.managers.PropertyManager;
+import io.goobi.vocabulary.exchange.FieldDefinition;
+import io.goobi.vocabulary.exchange.VocabularySchema;
+import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
+import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabulary;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
+import net.xeoh.plugins.base.annotations.PluginImplementation;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration.SubnodeConfiguration;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang.StringUtils;
+import org.goobi.beans.Process;
+import org.goobi.beans.Processproperty;
+import org.goobi.beans.Step;
+import org.goobi.production.cli.helper.StringPair;
+import org.goobi.production.enums.PluginGuiType;
+import org.goobi.production.enums.PluginReturnValue;
+import org.goobi.production.enums.PluginType;
+import org.goobi.production.enums.StepReturnValue;
+import org.goobi.production.flow.statistics.hibernate.FilterHelper;
+import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
+import org.primefaces.event.CloseEvent;
+import ugh.dl.DigitalDocument;
+import ugh.dl.DocStruct;
+import ugh.dl.Fileformat;
+import ugh.dl.Metadata;
+import ugh.dl.MetadataType;
+import ugh.dl.Person;
+import ugh.dl.Prefs;
+import ugh.exceptions.MetadataTypeNotAllowedException;
+import ugh.exceptions.PreferencesException;
+import ugh.exceptions.ReadException;
+import ugh.exceptions.WriteException;
+
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,69 +76,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.SubnodeConfiguration;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.lang.StringUtils;
-import org.goobi.beans.Process;
-import org.goobi.beans.Processproperty;
-import org.goobi.beans.Step;
-import org.goobi.production.cli.helper.StringPair;
-import org.goobi.production.enums.PluginGuiType;
-import org.goobi.production.enums.PluginReturnValue;
-import org.goobi.production.enums.PluginType;
-import org.goobi.production.enums.StepReturnValue;
-import org.goobi.production.flow.statistics.hibernate.FilterHelper;
-import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
-import org.goobi.vocabulary.Field;
-import org.goobi.vocabulary.VocabRecord;
-import org.goobi.vocabulary.Vocabulary;
-import org.primefaces.event.CloseEvent;
-
-import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
-import de.sub.goobi.config.ConfigPlugins;
-import de.sub.goobi.helper.FacesContextHelper;
-import de.sub.goobi.helper.Helper;
-import de.sub.goobi.helper.NIOFileUtils;
-import de.sub.goobi.helper.StorageProvider;
-import de.sub.goobi.helper.enums.PropertyType;
-import de.sub.goobi.helper.exceptions.DAOException;
-import de.sub.goobi.helper.exceptions.SwapException;
-import de.sub.goobi.metadaten.Image;
-import de.sub.goobi.persistence.managers.MetadataManager;
-import de.sub.goobi.persistence.managers.MySQLHelper;
-import de.sub.goobi.persistence.managers.ProcessManager;
-import de.sub.goobi.persistence.managers.PropertyManager;
-import de.sub.goobi.persistence.managers.VocabularyManager;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
-import net.xeoh.plugins.base.annotations.PluginImplementation;
-import ugh.dl.DigitalDocument;
-import ugh.dl.DocStruct;
-import ugh.dl.Fileformat;
-import ugh.dl.Metadata;
-import ugh.dl.MetadataType;
-import ugh.dl.Person;
-import ugh.dl.Prefs;
-import ugh.exceptions.MetadataTypeNotAllowedException;
-import ugh.exceptions.PreferencesException;
-import ugh.exceptions.ReadException;
-import ugh.exceptions.WriteException;
 
 @Log4j2
 @PluginImplementation
@@ -202,6 +202,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     @Setter
     private boolean displayMetadataAddPopup = false;
+
+
+    private VocabularyAPIManager vocabularyAPI = VocabularyAPIManager.getInstance();
 
     @Override
     public PluginReturnValue run() {
@@ -353,53 +356,42 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 List<String> fields = Arrays.asList(field.getStringArray("/searchParameter"));
 
                 if (fields == null || fields.isEmpty()) {
-                    Vocabulary currentVocabulary = VocabularyManager.getVocabularyByTitle(vocabularyName);
-                    vocabularyUrl = getVocabularyBaseName() + currentVocabulary.getId();
-                    if (currentVocabulary != null) {
-                        VocabularyManager.getAllRecords(currentVocabulary);
-                        List<VocabRecord> recordList = currentVocabulary.getRecords();
-                        Collections.sort(recordList);
-                        vocabularyRecords = new ArrayList<>(recordList.size());
-                        if (currentVocabulary != null && currentVocabulary.getId() != null) {
-                            for (VocabRecord vr : recordList) {
-                                for (Field f : vr.getFields()) {
-                                    if (f.getDefinition().isMainEntry()) {
-                                        vocabularyRecords.add(new SelectItem(String.valueOf(vr.getId()), f.getValue()));
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                    vocabularyUrl = vocabulary.getURI();
+
+                    vocabularyRecords = vocabularyAPI.vocabularyRecords()
+                            .getRecordSelectItems(vocabulary.getId());
                 } else {
-                    List<StringPair> vocabularySearchFields = new ArrayList<>();
-                    for (String fieldname : fields) {
-                        String[] parts = fieldname.trim().split("=");
-                        if (parts.length > 1) {
-                            String fieldName = parts[0];
-                            String value = parts[1];
-                            StringPair sp = new StringPair(fieldName, value);
-                            vocabularySearchFields.add(sp);
-                        }
+                    if (fields.size() > 1) {
+                        Helper.setFehlerMeldung("vocabularyList with multiple fields is not supported right now");
+                        return;
                     }
-                    List<VocabRecord> records = VocabularyManager.findRecords(vocabularyName, vocabularySearchFields);
-                    if (records != null && !records.isEmpty()) {
-                        Collections.sort(records);
-                        vocabularyRecords = new ArrayList<>(records.size());
-                        for (VocabRecord vr : records) {
 
-                            if (StringUtils.isBlank(vocabularyUrl)) {
-                                vocabularyUrl = getVocabularyBaseName() + vr.getVocabularyId();
-                            }
-
-                            for (Field f : vr.getFields()) {
-                                if (f.getDefinition().isMainEntry()) {
-                                    vocabularyRecords.add(new SelectItem(String.valueOf(vr.getId()), f.getValue()));
-                                    break;
-                                }
-                            }
-                        }
+                    String[] parts = fields.get(0).trim().split("=");
+                    if (parts.length != 2) {
+                        Helper.setFehlerMeldung("Wrong field format");
+                        return;
                     }
+
+                    String searchFieldName = parts[0];
+                    String searchFieldValue = parts[1];
+
+                    ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                    vocabularyUrl = vocabulary.getURI();
+                    VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
+                    Optional<FieldDefinition> searchField = schema.getDefinitions().stream()
+                            .filter(d -> d.getName().equals(searchFieldName))
+                            .findFirst();
+
+                    if (searchField.isEmpty()) {
+                        Helper.setFehlerMeldung("Field " + searchFieldName + " not found in vocabulary " + vocabulary.getName());
+                        return;
+                    }
+
+                    vocabularyRecords = vocabularyAPI.vocabularyRecords()
+                            .getRecordSelectItems(vocabularyAPI.vocabularyRecords()
+                                    .list(vocabulary.getId())
+                                    .search(searchField.get().getId() + ":" + searchFieldValue));
                 }
             }
 
