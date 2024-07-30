@@ -18,7 +18,6 @@ import io.goobi.vocabulary.exchange.FieldDefinition;
 import io.goobi.vocabulary.exchange.VocabularySchema;
 import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
 import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabulary;
-import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabularyRecord;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -361,13 +360,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     vocabularyUrl = vocabulary.getURI();
 
                     vocabularyRecords = vocabularyAPI.vocabularyRecords()
-                            .list(vocabulary.getId())
-                            .all()
-                            .request()
-                            .getContent()
-                            .stream()
-                            .map(r -> new SelectItem(String.valueOf(r.getId()), r.getMainValue()))
-                            .collect(Collectors.toList());
+                            .getRecordSelectItems(vocabulary.getId());
                 } else {
                     if (fields.size() > 1) {
                         Helper.setFehlerMeldung("vocabularyList with multiple fields is not supported right now");
@@ -396,14 +389,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     }
 
                     vocabularyRecords = vocabularyAPI.vocabularyRecords()
-                            .list(vocabulary.getId())
-                            .search(searchField.get().getId() + ":" + searchFieldValue)
-                            .all()
-                            .request()
-                            .getContent()
-                            .stream()
-                            .map(r -> new SelectItem(String.valueOf(r.getId()), r.getMainValue()))
-                            .collect(Collectors.toList());
+                            .getRecordSelectItems(vocabularyAPI.vocabularyRecords()
+                                    .list(vocabulary.getId())
+                                    .search(searchField.get().getId() + ":" + searchFieldValue));
                 }
             }
 
