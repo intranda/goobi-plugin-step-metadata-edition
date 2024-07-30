@@ -4,7 +4,7 @@
 			<arg value="package"/>
             <arg value="-Dmaven.test.skip=true" />
 		</exec>
-		<copy file="module-gui/target/plugin_intranda_step_metadata_edition-GUI.jar" todir="/opt/digiverso/goobi/plugins/GUI/"/>
-		<copy file="module-main/target/plugin_intranda_step_metadata_edition.jar" todir="/opt/digiverso/goobi/plugins/step/"/>
+		<copy file="module-gui/target/plugin-step-metadata-edition-gui.jar" todir="/opt/digiverso/goobi/plugins/GUI/"/>
+		<copy file="module-base/target/plugin-step-metadata-edition-base.jar" todir="/opt/digiverso/goobi/plugins/step/"/>
 	</target>
 </project>

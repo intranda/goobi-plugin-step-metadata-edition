@@ -2,6 +2,7 @@ package de.intranda.goobi.plugins;
 
 import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
 import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.FacesContextHelper;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.StorageProvider;
@@ -16,7 +17,8 @@ import de.sub.goobi.persistence.managers.PropertyManager;
 import io.goobi.vocabulary.exchange.FieldDefinition;
 import io.goobi.vocabulary.exchange.VocabularySchema;
 import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
-import io.goobi.workflow.api.vocabulary.jsfwrapper.JSFVocabularyRecord;
+import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabulary;
+import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabularyRecord;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,8 +52,17 @@ import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
 import ugh.exceptions.WriteException;
 
+import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -68,6 +79,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Log4j2
 @PluginImplementation
@@ -173,6 +186,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     private boolean displayMetadataAddButton = true;
 
+    @Getter
+    private boolean displayDownloadButton = false;
+
     private transient List<MetadataField> deleteList = new ArrayList<>();
 
     @Getter
@@ -274,6 +290,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         this.displayImageArea = this.myconfig.getBoolean("showImages", false);
         this.displayMetadataImportButton = this.myconfig.getBoolean("showImportMetadata", false);
         this.displayMetadataAddButton = this.myconfig.getBoolean("showAddMetadata", false);
+        displayDownloadButton = myconfig.getBoolean("showDownloadFiles", false);
 
         try {
             if ("master".equalsIgnoreCase(this.myconfig.getString("imageFolder", null))) {
@@ -340,12 +357,15 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 List<String> fields = Arrays.asList(field.getStringArray("/searchParameter"));
 
                 if (fields == null || fields.isEmpty()) {
-                    io.goobi.vocabulary.exchange.Vocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
-                    vocabularyUrl = vocabulary.get_links().get("self").getHref();
+                    ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                    vocabularyUrl = vocabulary.getURI();
 
-                    List<JSFVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords().all(vocabulary.getId());
-
-                    vocabularyRecords = recordList.stream()
+                    vocabularyRecords = vocabularyAPI.vocabularyRecords()
+                            .list(vocabulary.getId())
+                            .all()
+                            .request()
+                            .getContent()
+                            .stream()
                             .map(r -> new SelectItem(String.valueOf(r.getId()), r.getMainValue()))
                             .collect(Collectors.toList());
                 } else {
@@ -363,8 +383,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     String searchFieldName = parts[0];
                     String searchFieldValue = parts[1];
 
-                    io.goobi.vocabulary.exchange.Vocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
-                    vocabularyUrl = vocabulary.get_links().get("self").getHref();
+                    ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                    vocabularyUrl = vocabulary.getURI();
                     VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
                     Optional<FieldDefinition> searchField = schema.getDefinitions().stream()
                             .filter(d -> d.getName().equals(searchFieldName))
@@ -375,16 +395,22 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         return;
                     }
 
-                    // Assume there are not than 1000 hits, otherwise it is not useful anyway..
-                    List<JSFVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords()
-                            .search(vocabulary.getId(), searchField.get().getId() + ":" + searchFieldValue)
-                            .getContent();
-
-                    vocabularyRecords = recordList.stream()
+                    vocabularyRecords = vocabularyAPI.vocabularyRecords()
+                            .list(vocabulary.getId())
+                            .search(searchField.get().getId() + ":" + searchFieldValue)
+                            .all()
+                            .request()
+                            .getContent()
+                            .stream()
                             .map(r -> new SelectItem(String.valueOf(r.getId()), r.getMainValue()))
                             .collect(Collectors.toList());
                 }
             }
+
+            if (vocabularyRecords == null) {
+                vocabularyRecords = Collections.emptyList();
+            }
+
             MetadataConfiguredField metadataField = new MetadataConfiguredField(source, name, fieldType, label, required, helpText, searchable);
             metadataField.setStructType(structType);
             metadataField.setDefaultValue(defaultValue);
@@ -644,7 +670,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     Person p = new Person(mdt);
                     p.setFirstname(personToImport.getFirstname());
                     p.setLastname(personToImport.getLastname());
-                    p.setAutorityFile(personToImport.getAuthorityID(), personToImport.getAuthorityURI(), personToImport.getAuthorityValue());
+                    p.setAuthorityFile(personToImport.getAuthorityID(), personToImport.getAuthorityURI(), personToImport.getAuthorityValue());
                     destination.addPerson(p);
                 } catch (MetadataTypeNotAllowedException e) {
                     log.error(e);
@@ -666,7 +692,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 try {
                     Metadata md = new Metadata(mdt);
                     md.setValue(metadataToImport.getValue());
-                    md.setAutorityFile(metadataToImport.getAuthorityID(), metadataToImport.getAuthorityURI(), metadataToImport.getAuthorityValue());
+                    md.setAuthorityFile(metadataToImport.getAuthorityID(), metadataToImport.getAuthorityURI(), metadataToImport.getAuthorityValue());
                     destination.addMetadata(md);
                 } catch (MetadataTypeNotAllowedException e) {
                     log.error(e);
@@ -848,7 +874,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         return Collections.emptyMap();
     }
 
-    public static final ResultSetHandler<Map<Integer, String>> resultSetToMapHandler = new ResultSetHandler<Map<Integer, String>>() {
+    public static final ResultSetHandler<Map<Integer, String>> resultSetToMapHandler = new ResultSetHandler<>() {
         @Override
         public Map<Integer, String> handle(ResultSet rs) throws SQLException {
             Map<Integer, String> answer = new HashMap<>();
@@ -963,6 +989,20 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         this.displayMetadataAddPopup = true;
     }
 
+    private String getVocabularyBaseName() {
+        FacesContext context = FacesContextHelper.getCurrentFacesContext();
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+        String contextPath = request.getContextPath();
+        String scheme = request.getScheme(); // http
+        String serverName = request.getServerName(); // hostname.com
+        int serverPort = request.getServerPort(); // 80
+        String reqUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+        Client client = ClientBuilder.newClient();
+        WebTarget base = client.target(reqUrl);
+        WebTarget vocabularyBase = base.path("api").path("vocabulary");
+        return vocabularyBase.path("records").getUri().toString() + "/";
+    }
+
     // unused
     public void addField() {
         MetadataConfiguredField field = this.currentField.getConfiguredField();
@@ -997,7 +1037,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     Person person = new Person(this.currentField.getPerson().getType());
                     person.setFirstname(this.currentField.getPerson().getFirstname());
                     person.setLastname(this.currentField.getPerson().getLastname());
-                    person.setAutorityFile(this.currentField.getPerson().getAuthorityID(), this.currentField.getPerson().getAuthorityURI(),
+                    person.setAuthorityFile(this.currentField.getPerson().getAuthorityID(), this.currentField.getPerson().getAuthorityURI(),
                             this.currentField.getPerson().getAuthorityValue());
                     this.currentField.getPerson().getParent().addPerson(person);
                     metadataField.setPerson(person);
@@ -1067,7 +1107,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         for (SelectItem item : this.selectedField.getVocabularyList()) {
                             if (this.newValue.equals(item.getValue())) {
                                 md.setValue(item.getLabel());
-                                md.setAutorityFile(this.selectedField.getVocabularyName(), this.selectedField.getVocabularyUrl(),
+                                md.setAuthorityFile(this.selectedField.getVocabularyName(), this.selectedField.getVocabularyUrl(),
                                         this.selectedField.getVocabularyUrl() + "/" + this.newValue);
                                 break;
                             }
@@ -1117,6 +1157,63 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             }
             this.newField = newField;
         }
+    }
+
+    public void downloadAllFiles() throws IOException {
+        // get all files in folder
+        Path path = Paths.get(imageFolderName);
+        if (StorageProvider.getInstance().isFileExists(path)) {
+            List<String> files = StorageProvider.getInstance().list(imageFolderName);
+
+            // if no files -> do nothing
+            if (files.isEmpty()) {
+                return;
+            } else {
+
+                FacesContext facesContext = FacesContextHelper.getCurrentFacesContext();
+                HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
+                ServletContext servletContext = (ServletContext) facesContext.getExternalContext().getContext();
+                OutputStream out = response.getOutputStream();
+
+                if (files.size() == 1) {
+                    // if one file -> write to output stream
+                    String fileName = files.get(0);
+                    String contentType = servletContext.getMimeType(fileName);
+                    response.setContentType(contentType);
+                    response.setHeader("Content-Disposition", "attachment;filename=\"" + fileName + "\"");
+
+                    Path p = Paths.get(imageFolderName, fileName);
+                    try (InputStream inputStream = StorageProvider.getInstance().newInputStream(p)) {
+                        inputStream.transferTo(out);
+                    }
+
+                } else {
+                    // if more than one -> create zip, send zip to stream
+
+                    response.setContentType("application/zip");
+                    response.setHeader("Content-Disposition", "attachment;filename=\"" + process.getTitel() + ".zip\"");
+
+                    ZipOutputStream zos = new ZipOutputStream(out);
+                    for (String fileName : files) {
+
+                        try (InputStream in = StorageProvider.getInstance().newInputStream(Paths.get(imageFolderName, fileName))) {
+                            zos.putNextEntry(new ZipEntry(fileName));
+                            byte[] b = new byte[1024];
+                            int count;
+
+                            while ((count = in.read(b)) > 0) {
+                                out.write(b, 0, count);
+                            }
+                        }
+                    }
+                    zos.flush();
+                    zos.close();
+
+                }
+
+            }
+        }
+
     }
 
 }

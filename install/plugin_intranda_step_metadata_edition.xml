@@ -106,5 +106,6 @@
         <showImages>false</showImages>
         <showAddMetadata>false</showAddMetadata>
         <showImportMetadata>false</showImportMetadata>
+        <showDownloadFiles>false</showDownloadFiles>        
     </config>
 </config_plugin>
