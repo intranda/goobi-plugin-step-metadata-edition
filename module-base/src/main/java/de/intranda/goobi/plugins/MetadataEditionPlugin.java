@@ -1,5 +1,52 @@
 package de.intranda.goobi.plugins;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration.SubnodeConfiguration;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang.StringUtils;
+import org.goobi.beans.Process;
+import org.goobi.beans.Processproperty;
+import org.goobi.beans.Step;
+import org.goobi.production.cli.helper.StringPair;
+import org.goobi.production.enums.PluginGuiType;
+import org.goobi.production.enums.PluginReturnValue;
+import org.goobi.production.enums.PluginType;
+import org.goobi.production.enums.StepReturnValue;
+import org.goobi.production.flow.statistics.hibernate.FilterHelper;
+import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
+import org.primefaces.event.CloseEvent;
+
 import de.intranda.goobi.plugins.ProcessMetadata.ProcessMetadataField;
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.FacesContextHelper;
@@ -23,22 +70,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.SubnodeConfiguration;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.lang.StringUtils;
-import org.goobi.beans.Process;
-import org.goobi.beans.Processproperty;
-import org.goobi.beans.Step;
-import org.goobi.production.cli.helper.StringPair;
-import org.goobi.production.enums.PluginGuiType;
-import org.goobi.production.enums.PluginReturnValue;
-import org.goobi.production.enums.PluginType;
-import org.goobi.production.enums.StepReturnValue;
-import org.goobi.production.flow.statistics.hibernate.FilterHelper;
-import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
-import org.primefaces.event.CloseEvent;
 import ugh.dl.DigitalDocument;
 import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
@@ -50,36 +81,6 @@ import ugh.exceptions.MetadataTypeNotAllowedException;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
 import ugh.exceptions.WriteException;
-
-import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 @Log4j2
 @PluginImplementation
@@ -202,7 +203,6 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     @Setter
     private boolean displayMetadataAddPopup = false;
-
 
     private VocabularyAPIManager vocabularyAPI = VocabularyAPIManager.getInstance();
 
@@ -379,7 +379,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
                     vocabularyUrl = vocabulary.getURI();
                     VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
-                    Optional<FieldDefinition> searchField = schema.getDefinitions().stream()
+                    Optional<FieldDefinition> searchField = schema.getDefinitions()
+                            .stream()
                             .filter(d -> d.getName().equals(searchFieldName))
                             .findFirst();
 
@@ -431,7 +432,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
                 if (!found) {
                     Processproperty property = new Processproperty();
-                    property.setContainer(0);
+                    property.setContainer("0");
                     property.setCreationDate(new Date());
                     property.setProcessId(this.process.getId());
                     property.setProzess(this.process);
@@ -1000,7 +1001,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
             if ("property".contains(field.getSource())) {
                 Processproperty property = new Processproperty();
-                property.setContainer(0);
+                property.setContainer("0");
                 property.setCreationDate(new Date());
                 property.setProcessId(this.process.getId());
                 property.setProzess(this.process);
@@ -1068,7 +1069,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         switch (this.selectedField.getSource()) {
             case "property":
                 Processproperty property = new Processproperty();
-                property.setContainer(0);
+                property.setContainer("0");
                 property.setCreationDate(new Date());
                 property.setProcessId(this.process.getId());
                 property.setProzess(this.process);
