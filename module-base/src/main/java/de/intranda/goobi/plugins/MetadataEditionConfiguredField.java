@@ -14,7 +14,7 @@ import ugh.dl.Person;
 
 @Data
 @RequiredArgsConstructor
-public class MetadataConfiguredField {
+public class MetadataEditionConfiguredField {
 
     // metadata, property or person
     @NonNull
@@ -67,22 +67,22 @@ public class MetadataConfiguredField {
     private boolean repeatable;
     private boolean deletable;
 
-    private List<MetadataField> metadataFields = new ArrayList<>();
+    private List<MetadataEditionField> metadataFields = new ArrayList<>();
 
     private boolean onlyEmptyReadOnlyFields;
 
-    public void addMetadataField(MetadataField mf) {
+    public void addMetadataField(MetadataEditionField mf) {
         this.metadataFields.add(mf);
     }
 
-    public void deleteMetadataField(MetadataField mf) {
+    public void deleteMetadataField(MetadataEditionField mf) {
         this.metadataFields.remove(mf);
     }
 
     public boolean isShowField() {
         // show only filled read only fields
         if ("textReadonly".equals(this.type) || "textareaReadonly".equals(this.type) || !this.onlyEmptyReadOnlyFields) {
-            for (MetadataField mf : this.metadataFields) {
+            for (MetadataEditionField mf : this.metadataFields) {
                 if (mf.getPerson() != null) {
                     Person p = mf.getPerson();
                     if (StringUtils.isNotBlank(p.getLastname()) || StringUtils.isNotBlank(p.getFirstname())) {
