@@ -2,6 +2,9 @@ package de.intranda.goobi.plugins;
 
 import javax.faces.model.SelectItem;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Processproperty;
 
@@ -13,7 +16,7 @@ import ugh.dl.Person;
 
 @Data
 @RequiredArgsConstructor
-public class MetadataField {
+public class MetadataEditionField {
 
     // holds the actual object
     private Metadata metadata;
@@ -21,7 +24,8 @@ public class MetadataField {
     private Processproperty property;
 
     @NonNull
-    private MetadataConfiguredField configuredField;
+    @ToString.Exclude
+    private MetadataEditionConfiguredField configuredField;
 
     public void setVocabularyValue(String value) {
         if (StringUtils.isNotBlank(value)) {
@@ -29,13 +33,20 @@ public class MetadataField {
                 if (value.equals(item.getValue())) {
                     if (metadata != null) {
                         metadata.setValue(item.getLabel());
-                        metadata.setAuthorityFile(configuredField.getVocabularyName(), configuredField.getVocabularyUrl(),
-                                configuredField.getVocabularyUrl() + "/" + value);
+                        // TODO: Write correct authority information here
+//                        metadata.setAuthorityFile(configuredField.getVocabularyName(), configuredField.getVocabularyUrl(),
+//                                configuredField.getVocabularyUrl() + "/" + value);
                     } else if (property != null) {
                         property.setWert(item.getLabel());
                     }
                     break;
                 }
+            }
+        } else {
+            if (metadata != null) {
+                metadata.setValue(null);
+            } else if (property != null) {
+                property.setWert(null);
             }
         }
     }
@@ -79,5 +90,4 @@ public class MetadataField {
     public String getHelpText() {
         return configuredField.getHelpText();
     }
-
 }

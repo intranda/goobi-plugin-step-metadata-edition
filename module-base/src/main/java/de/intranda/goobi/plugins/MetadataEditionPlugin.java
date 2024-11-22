@@ -140,11 +140,11 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private Integer imageIndex = null;
 
     @Getter
-    private transient List<MetadataConfiguredField> metadataFieldList = new ArrayList<>();
+    private transient List<MetadataEditionConfiguredField> metadataFieldList = new ArrayList<>();
 
     @Getter
     @Setter
-    private transient MetadataField currentField;
+    private transient MetadataEditionField currentField;
 
     @Getter
     @Setter
@@ -189,7 +189,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     @Getter
     private boolean displayDownloadButton = false;
 
-    private transient List<MetadataField> deleteList = new ArrayList<>();
+    private transient List<MetadataEditionField> deleteList = new ArrayList<>();
 
     @Getter
     @Setter
@@ -198,7 +198,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     private String newField;
 
     @Getter
-    private transient MetadataConfiguredField selectedField;
+    private transient MetadataEditionConfiguredField selectedField;
 
     @Getter
     @Setter
@@ -400,7 +400,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 vocabularyRecords = Collections.emptyList();
             }
 
-            MetadataConfiguredField metadataField = new MetadataConfiguredField(source, name, fieldType, label, required, helpText, searchable);
+            MetadataEditionConfiguredField metadataField = new MetadataEditionConfiguredField(source, name, fieldType, label, required, helpText, searchable);
             metadataField.setStructType(structType);
             metadataField.setDefaultValue(defaultValue);
             metadataField.setValidationRegex(validationRegex);
@@ -416,13 +416,14 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             this.metadataFieldList.add(metadataField);
         }
 
-        for (MetadataConfiguredField cf : this.metadataFieldList) {
+        List<MetadataEditionConfiguredField> brokenConfiguredFields = new ArrayList<>(this.metadataFieldList.size());
+        for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
             boolean found = false;
             if ("property".contains(cf.getSource())) {
                 for (Processproperty prop : properties) {
                     if (prop.getTitel().equals(cf.getName())) {
                         found = true;
-                        MetadataField mf = new MetadataField(cf);
+                        MetadataEditionField mf = new MetadataEditionField(cf);
                         mf.setProperty(prop);
                         if (StringUtils.isBlank(prop.getWert())) {
                             prop.setWert(cf.getDefaultValue());
@@ -440,7 +441,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     property.setType(PropertyType.STRING);
                     property.setWert(cf.getDefaultValue());
                     this.process.getEigenschaften().add(property);
-                    MetadataField mf = new MetadataField(cf);
+                    MetadataEditionField mf = new MetadataEditionField(cf);
                     mf.setProperty(property);
                     property.setWert(cf.getDefaultValue());
                     cf.addMetadataField(mf);
@@ -461,7 +462,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                             if (StringUtils.isBlank(md.getValue())) {
                                 md.setValue(cf.getDefaultValue());
                             }
-                            MetadataField mf = new MetadataField(cf);
+                            MetadataEditionField mf = new MetadataEditionField(cf);
                             mf.setMetadata(md);
                             cf.addMetadataField(mf);
                         }
@@ -476,7 +477,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         } else {
                             this.logical.addMetadata(md);
                         }
-                        MetadataField mf = new MetadataField(cf);
+                        MetadataEditionField mf = new MetadataEditionField(cf);
                         mf.setMetadata(md);
                         cf.addMetadataField(mf);
                     } catch (MetadataTypeNotAllowedException e) {
@@ -497,7 +498,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     for (Person p : personList) {
                         if (p.getType().getName().equals(cf.getName())) {
                             found = true;
-                            MetadataField mf = new MetadataField(cf);
+                            MetadataEditionField mf = new MetadataEditionField(cf);
                             mf.setPerson(p);
                             cf.addMetadataField(mf);
                         }
@@ -511,7 +512,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                         } else {
                             this.logical.addPerson(person);
                         }
-                        MetadataField mf = new MetadataField(cf);
+                        MetadataEditionField mf = new MetadataEditionField(cf);
                         mf.setPerson(person);
                         cf.addMetadataField(mf);
                     } catch (MetadataTypeNotAllowedException e) {
@@ -519,7 +520,16 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                     }
                 }
             }
+
+            if (cf.getMetadataFields().isEmpty()) {
+                brokenConfiguredFields.add(cf);
+                String message = "The configured field \"" + cf.getLabel() + "\" contains no valid metadata fields, it will be removed! Please check your configuration!";
+                log.error(message);
+                Helper.setFehlerMeldung(message);
+            }
         }
+
+        brokenConfiguredFields.forEach(cf -> this.metadataFieldList.remove(cf));
 
         //* Allow the search of other processes inside of Goobi to find items with the same NLI identifier and which have a specific workflow progress
         //* Allow to duplicate metadata from a searched Goobi process into the current process
@@ -709,10 +719,10 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     public void saveAllChanges() {
 
         boolean totalValid = true;
-        for (MetadataConfiguredField mf : this.metadataFieldList) {
+        for (MetadataEditionConfiguredField mf : this.metadataFieldList) {
             if (mf.getRequired().booleanValue()) {
                 boolean fieldValid = false;
-                for (MetadataField metadataField : mf.getMetadataFields()) {
+                for (MetadataEditionField metadataField : mf.getMetadataFields()) {
                     if (StringUtils.isNotBlank(metadataField.getValue())) {
                         fieldValid = true;
                     }
@@ -723,7 +733,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 }
 
             } else if (StringUtils.isNotBlank(mf.getValidationRegex())) {
-                for (MetadataField metadataField : mf.getMetadataFields()) {
+                for (MetadataEditionField metadataField : mf.getMetadataFields()) {
                     if (!metadataField.getValue().matches(mf.getValidationRegex())) {
                         Helper.setFehlerMeldung(mf.getLabel() + ": " + mf.getValidationErrorText(), "");
                         totalValid = false;
@@ -736,7 +746,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             return;
         }
 
-        for (MetadataField mf : this.deleteList) {
+        for (MetadataEditionField mf : this.deleteList) {
             if ("property".contains(mf.getConfiguredField().getSource())) {
                 Processproperty pp = mf.getProperty();
                 this.process.getEigenschaften().remove(pp);
@@ -757,8 +767,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         }
 
         // save properties
-        for (MetadataConfiguredField cf : this.metadataFieldList) {
-            for (MetadataField mf : cf.getMetadataFields()) {
+        for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
+            for (MetadataEditionField mf : cf.getMetadataFields()) {
                 if (mf.getProperty() != null) {
                     PropertyManager.saveProcessProperty(mf.getProperty());
                 }
@@ -994,9 +1004,9 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     // unused
     public void addField() {
-        MetadataConfiguredField field = this.currentField.getConfiguredField();
+        MetadataEditionConfiguredField field = this.currentField.getConfiguredField();
         if (field != null) {
-            MetadataField metadataField = new MetadataField(this.currentField.getConfiguredField());
+            MetadataEditionField metadataField = new MetadataEditionField(this.currentField.getConfiguredField());
             field.addMetadataField(metadataField);
 
             if ("property".contains(field.getSource())) {
@@ -1040,7 +1050,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void deleteField() {
         if (this.currentField != null) {
-            for (MetadataConfiguredField cf : this.metadataFieldList) {
+            for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
                 if (cf.getSource().equals(this.currentField.getConfiguredField().getSource())) {
                     cf.getMetadataFields().remove(this.currentField);
                 }
@@ -1052,7 +1062,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public List<SelectItem> getPossibleFields() {
         List<SelectItem> answer = new ArrayList<>();
-        for (MetadataConfiguredField cf : this.metadataFieldList) {
+        for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
             if ((cf.isRepeatable() || cf.getMetadataFields().isEmpty())
                     && (!"textReadonly".equals(cf.getType()) && !"textareaReadonly".equals(cf.getType()))) {
                 answer.add(new SelectItem(cf.getName(), cf.getLabel()));
@@ -1064,7 +1074,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
     public void addMetadataField() {
         this.displayMetadataAddPopup = false;
 
-        MetadataField mf = new MetadataField(this.selectedField);
+        MetadataEditionField mf = new MetadataEditionField(this.selectedField);
         this.selectedField.addMetadataField(mf);
         switch (this.selectedField.getSource()) {
             case "property":
@@ -1138,7 +1148,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     public void setNewField(String newField) {
         if (this.newField == null || !this.newField.equals(newField)) {
-            for (MetadataConfiguredField cf : this.metadataFieldList) {
+            for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
                 if (cf.getName().equals(newField)) {
                     this.selectedField = cf;
                     break;
