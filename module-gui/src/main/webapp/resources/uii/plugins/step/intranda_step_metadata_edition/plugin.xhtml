@@ -15,13 +15,13 @@
         href="intranda_step_metadata_edition.css" />
 
             <style>
-            
+
         .goobi-thumbnail {
             float: left;
             margin: 7px;
             width: #{AktuelleSchritteForm.myPlugin.thumbnailSize +2}px;
             height: #{AktuelleSchritteForm .myPlugin.thumbnailSize+55}px;
-            text-align: center;  
+            text-align: center;
         }
         .goobi-thumbnail .goobi-thumbnail-image {
             float: left;
@@ -85,6 +85,8 @@
                                     value="#{!AktuelleSchritteForm.myPlugin.collapsedImageSelection}"
                                     target="#{AktuelleSchritteForm.myPlugin.collapsedImageSelection}" />
                                 <i class="#{AktuelleSchritteForm.myPlugin.collapsedImageSelection ? 'fa fa-angle-down':'fa fa-angle-up'}"></i>
+                                <f:ajax
+                                    render="@form" />
                             </button>
                         </div>
                     </intranda:boxTitle>
@@ -169,6 +171,8 @@
                             value="#{!AktuelleSchritteForm.myPlugin.collapsedProperties}"
                             target="#{AktuelleSchritteForm.myPlugin.collapsedProperties}" />
                         <i class="#{AktuelleSchritteForm.myPlugin.collapsedProperties ? 'fa fa-angle-down':'fa fa-angle-up'}"></i>
+                        <f:ajax
+                            render="@form" />
                     </button>
                 </div>
             </intranda:boxTitle>
@@ -209,7 +213,8 @@
                                         <h:commandLink
                                             styleClass="btn btn-blank p-1 font-light"
                                             title="#{msgs.search}"
-                                            action="#{AktuelleSchritteForm.myPlugin.seachField}">
+                                            action="#{AktuelleSchritteForm.myPlugin.seachField}"
+                                            onclick="PF( 'dlg1' ).show();">
                                             <i class="fa fa-search" />
                                             <f:setPropertyActionListener
                                                 value="true"
@@ -217,6 +222,8 @@
                                             <f:setPropertyActionListener
                                                 value="#{field}"
                                                 target="#{AktuelleSchritteForm.myPlugin.currentField}" />
+                                            <f:ajax
+                                                render="@form" />
                                         </h:commandLink>
                                     </ui:fragment>
 
@@ -428,6 +435,8 @@
                     <span>
                         <h:outputText value="#{msgs.speichern}" />
                     </span>
+                    <f:ajax
+                        render="@form" />
                 </h:commandLink>
 
             </div>
@@ -435,7 +444,6 @@
 
         </intranda:box>
         <!-- // PROPERTY BOX -->
-
 
         <!-- MODAL TO ADD METADATA -->
         <p:dialog
@@ -581,7 +589,6 @@
         <!-- MODAL TO SEARCH PROCESS -->
         <p:dialog
             id="dialogue"
-            rendered="#{AktuelleSchritteForm.myPlugin.displaySearchPopup}"
             header="#{msgs.intranda_step_metadata_edition_searchForProcess}"
             widgetVar="dlg1"
             minHeight="40"
@@ -631,7 +638,8 @@
             </h:panelGroup>
             <h:panelGroup
                 id="resultList"
-                styleClass="m-3 d-block">
+                styleClass="m-3 d-block"
+                layout="block">
 
                 <hr jsf:rendered="#{AktuelleSchritteForm.myPlugin.displaySearchOption}" />
 
@@ -708,7 +716,7 @@
 	        window.onload = function() {
 	            loadImages();
 	        }
-	
+
 	        function loadThumbnails() {
 	            var height = parseInt( '#{AktuelleSchritteForm.myPlugin.thumbnailSize}' );
 	            if ( height ) {
@@ -718,18 +726,18 @@
 	                $( '.goobi-thumbnail-image' ).css( 'max-width', ( height ) + 'px' );
 	            }
 	        }
-	
+
 	        function updateSelectedThumbnail(element) {
-	         
+
 	            var galleryLinks = document.getElementsByClassName('goobi-thumbnail img-active');
 	            console.log(galleryLinks);
 	            for (var i = 0; i &lt; galleryLinks.length; i++) {
-	                galleryLinks[i].className = "goobi-thumbnail font-light";            
+	                galleryLinks[i].className = "goobi-thumbnail font-light";
 	            }
 	            element.parentElement.parentElement.parentElement.className = "goobi-thumbnail img-active";
 	            return true;
 	        }
-	        
+
 	        $( document ).ready( function() {
 	            var displayPopup = '#{AktuelleSchritteForm.myPlugin.displaySearchPopup}';
 	            if ( displayPopup == 'true' ) {
@@ -739,19 +747,20 @@
 	            if ( displayMetadataPopup == 'true' ) {
 	                PF( 'dlg2' ).show();
 	            }
-	            
+
 	            loadThumbnails();
 	        } );
-	        
+
 	        jsf.ajax.addOnEvent( function( data ) {
 	            var ajaxstatus = data.status; // Can be "begin", "complete" and "success"
 	            switch ( ajaxstatus ) {
 	                case "success": // This is called when ajax response is successfully processed.
 	                    loadThumbnails();
+                        console.log('#{AktuelleSchritteForm.myPlugin.displaySearchPopup}');
 	                    break;
 	            }
 	        } );
-	      
+
 	    </script>
     </h:form>
 
