@@ -181,15 +181,17 @@
             <!-- LIST OF ALL FIELDS IF DISPLAYED-->
             <h:panelGroup
                 id="propertyBoxContent"
+                layout="block"
                 rendered="#{!AktuelleSchritteForm.myPlugin.collapsedProperties}">
                 <c:forEach
                     items="#{AktuelleSchritteForm.myPlugin.metadataFieldList}"
                     var="configuredField"
-                    varStatus="status">
+                    varStatus="parentStatus">
 
                     <c:forEach
                         var="field"
-                        items="#{configuredField.metadataFields}">
+                        items="#{configuredField.metadataFields}"
+                        varStatus="status">
 
                         <ui:fragment rendered="#{!AktuelleSchritteForm.myPlugin.hideEmptyFields or configuredField.showField}">
 
@@ -200,7 +202,7 @@
                                     class="col-12 col-md-3"
                                     style="justify-content: space-between;">
                                     <label
-                                        for="field_#{status.index}"
+                                        for="field_#{parentStatus.index}_#{status.index}"
                                         class="form__label">
                                         #{msgs[configuredField.label]}
                                         <i
@@ -250,15 +252,13 @@
                                 <!-- RIGHT COLUMN -->
                                 <div
                                     class="col-12 col-md-9"
-                                    id="field_#{status.index}"
                                     style="#{configuredField.type == 'multivalue' ? 'padding:0;' : ''}">
 
                                     <ui:fragment rendered="#{configuredField.type == 'text'}">
                                         <x:inputText
                                             styleClass="form-control"
                                             value="#{field.value}"
-                                            required="false"
-                                            id="field_#{status.index}">
+                                            required="false">
                                             <f:ajax
                                                 execute="@this"
                                                 render="@this"
@@ -271,7 +271,8 @@
                                             styleClass="form-control"
                                             value="#{field.value}"
                                             required="false"
-                                            style="resize: vertical;min-height:7em;">
+                                            style="resize: vertical;min-height:7em;"
+                                            >
                                             <f:ajax
                                                 execute="@this"
                                                 render="@this"
@@ -284,7 +285,8 @@
                                             styleClass="form-control"
                                             value="#{field.value}"
                                             required="false"
-                                            readonly="true">
+                                            readonly="true"
+                                            >
                                         </x:inputText>
                                     </ui:fragment>
 
@@ -294,14 +296,16 @@
                                             value="#{field.value}"
                                             required="false"
                                             readonly="true"
-                                            style="resize: vertical;min-height:7em;">
+                                            style="resize: vertical;min-height:7em;"
+                                            >
                                         </h:inputTextarea>
                                     </ui:fragment>
 
                                     <ui:fragment rendered="#{configuredField.type == 'list'}">
                                         <h:selectOneMenu
                                             styleClass="form-select"
-                                            value="#{field.value}">
+                                            value="#{field.value}"
+                                            >
                                             <f:ajax
                                                 event="change"
                                                 render="@this" />
@@ -320,7 +324,8 @@
                                     <ui:fragment rendered="#{configuredField.type == 'vocabularyList'}">
                                         <h:selectOneMenu
                                             styleClass="form-select"
-                                            value="#{field.vocabularyValue}">
+                                            value="#{field.vocabularyValue}"
+                                            >
                                             <f:ajax
                                                 event="change"
                                                 render="@this" />
@@ -339,7 +344,8 @@
                                     <ui:fragment rendered="#{configuredField.type == 'checkbox'}">
                                         <h:selectBooleanCheckbox
                                             styleClass="form-check-input"
-                                            value="#{field.value}">
+                                            value="#{field.value}"
+                                            >
                                             <f:ajax
                                                 event="change"
                                                 render="@this"
@@ -377,7 +383,7 @@
 
                                     <intranda:formHelp
                                         content="#{field.helpText}"
-                                        msgFor="field_#{status.index}" />
+                                        msgFor="field_#{parentStatus.index}_#{status.index}" />
 
                                 </div>
                                 <!-- RIGHT COLUMN -->
