@@ -767,6 +767,7 @@
             var ajaxstatus = data.status; // Can be "begin", "complete" and "success"
             switch ( ajaxstatus ) {
                 case "success": // This is called when ajax response is successfully processed.
+                    loadImages();
                     loadThumbnails();
                     const displayPopup = document.querySelector( '#displaySearchPopup' )?.value;
                     if ( displayPopup == 'true' ) {
