@@ -1,16 +1,13 @@
 package de.intranda.goobi.plugins;
 
-import javax.faces.model.SelectItem;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.Processproperty;
 
+import jakarta.faces.model.SelectItem;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import ugh.dl.Metadata;
 import ugh.dl.Person;
 
@@ -34,20 +31,18 @@ public class MetadataEditionField {
                     if (metadata != null) {
                         metadata.setValue(item.getLabel());
                         // TODO: Write correct authority information here
-//                        metadata.setAuthorityFile(configuredField.getVocabularyName(), configuredField.getVocabularyUrl(),
-//                                configuredField.getVocabularyUrl() + "/" + value);
+                        //                        metadata.setAuthorityFile(configuredField.getVocabularyName(), configuredField.getVocabularyUrl(),
+                        //                                configuredField.getVocabularyUrl() + "/" + value);
                     } else if (property != null) {
                         property.setWert(item.getLabel());
                     }
                     break;
                 }
             }
-        } else {
-            if (metadata != null) {
-                metadata.setValue(null);
-            } else if (property != null) {
-                property.setWert(null);
-            }
+        } else if (metadata != null) {
+            metadata.setValue(null);
+        } else if (property != null) {
+            property.setWert(null);
         }
     }
 
@@ -61,7 +56,8 @@ public class MetadataEditionField {
             label = "";
         }
         if (StringUtils.isNotBlank(label)) {
-            return configuredField.getVocabularyList().stream()
+            return configuredField.getVocabularyList()
+                    .stream()
                     .filter(s -> label.equals(s.getLabel()))
                     .map(s -> (String) s.getValue())
                     .findFirst()

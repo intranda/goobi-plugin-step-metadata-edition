@@ -3,10 +3,9 @@ package de.intranda.goobi.plugins;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.faces.model.SelectItem;
-
 import org.apache.commons.lang.StringUtils;
 
+import jakarta.faces.model.SelectItem;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

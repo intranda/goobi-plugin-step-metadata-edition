@@ -21,16 +21,6 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-
-import io.goobi.workflow.api.vocabulary.APIException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
@@ -64,8 +54,17 @@ import de.sub.goobi.persistence.managers.ProcessManager;
 import de.sub.goobi.persistence.managers.PropertyManager;
 import io.goobi.vocabulary.exchange.FieldDefinition;
 import io.goobi.vocabulary.exchange.VocabularySchema;
+import io.goobi.workflow.api.vocabulary.APIException;
 import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
 import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabulary;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.model.SelectItem;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -405,7 +404,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 vocabularyRecords = Collections.emptyList();
             }
 
-            MetadataEditionConfiguredField metadataField = new MetadataEditionConfiguredField(source, name, fieldType, label, required, helpText, searchable);
+            MetadataEditionConfiguredField metadataField =
+                    new MetadataEditionConfiguredField(source, name, fieldType, label, required, helpText, searchable);
             metadataField.setStructType(structType);
             metadataField.setDefaultValue(defaultValue);
             metadataField.setValidationRegex(validationRegex);
@@ -528,7 +528,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
             if (cf.getMetadataFields().isEmpty()) {
                 brokenConfiguredFields.add(cf);
-                String message = "The configured field \"" + cf.getLabel() + "\" contains no valid metadata fields, it will be removed! Please check your configuration!";
+                String message = "The configured field \"" + cf.getLabel()
+                        + "\" contains no valid metadata fields, it will be removed! Please check your configuration!";
                 log.error(message);
                 Helper.setFehlerMeldung(message);
             }

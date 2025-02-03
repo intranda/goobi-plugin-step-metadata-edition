@@ -4,7 +4,6 @@
     xmlns:composite="http://java.sun.com/jsf/composite"
     xmlns:f="http://java.sun.com/jsf/core"
     xmlns:h="http://java.sun.com/jsf/html"
-    xmlns:x="http://myfaces.apache.org/tomahawk"
     xmlns:intranda="http://xmlns.jcp.org/jsf/composite/compositesPG"
     xmlns:p="http://primefaces.org/ui"
     xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
@@ -255,7 +254,7 @@
                                     style="#{configuredField.type == 'multivalue' ? 'padding:0;' : ''}">
 
                                     <ui:fragment rendered="#{configuredField.type == 'text'}">
-                                        <x:inputText
+                                        <h:inputText
                                             styleClass="form-control"
                                             value="#{field.value}"
                                             required="false">
@@ -263,7 +262,7 @@
                                                 execute="@this"
                                                 render="@this"
                                                 event="blur" />
-                                        </x:inputText>
+                                        </h:inputText>
                                     </ui:fragment>
 
                                     <ui:fragment rendered="#{configuredField.type == 'textarea'}">
@@ -281,13 +280,13 @@
                                     </ui:fragment>
 
                                     <ui:fragment rendered="#{configuredField.type == 'textReadonly'}">
-                                        <x:inputText
+                                        <h:inputText
                                             styleClass="form-control"
                                             value="#{field.value}"
                                             required="false"
                                             readonly="true"
                                             >
-                                        </x:inputText>
+                                        </h:inputText>
                                     </ui:fragment>
 
                                     <ui:fragment rendered="#{configuredField.type == 'textareaReadonly'}">
@@ -522,11 +521,11 @@
                             <div class="col-12 col-md-9">
                                 <ui:fragment
                                     rendered="#{AktuelleSchritteForm.myPlugin.selectedField.type == 'text' or selectedField.type == 'multivalue'}">
-                                    <x:inputText
+                                    <h:inputText
                                         styleClass="form-control"
                                         value="#{AktuelleSchritteForm.myPlugin.newValue}"
                                         required="false">
-                                    </x:inputText>
+                                    </h:inputText>
                                 </ui:fragment>
 
                                 <ui:fragment rendered="#{AktuelleSchritteForm.myPlugin.selectedField.type == 'textarea'}">
@@ -628,7 +627,7 @@
                             value="#{msgs.intranda_step_metadata_edition_searchForProcess}" />
                     </div>
                     <div class="col-sm-7">
-                        <x:inputText
+                        <h:inputText
                             id="searchField"
                             styleClass="form-control"
                             value="#{AktuelleSchritteForm.myPlugin.searchValue}" />
@@ -656,7 +655,7 @@
 
                 <hr jsf:rendered="#{AktuelleSchritteForm.myPlugin.displaySearchOption}" />
 
-                <x:outputText
+                <h:outputText
                     id="noHitsFound"
                     styleClass="alert alert-warning d-block"
                     value="#{msgs.NORM_noHits}"
@@ -672,7 +671,7 @@
                         varStatus="processStatus">
                         <div class="row p-3">
                             <div class="col-sm-8">
-                                <x:outputText
+                                <h:outputText
                                     id="processtitle"
                                     styleClass="hitlisttitle"
                                     value="#{process.processTitle}" />
@@ -702,7 +701,7 @@
                                                 value="#{metadata.label}" />
                                         </td>
                                         <td>
-                                            <x:outputText
+                                            <h:outputText
                                                 id="md"
                                                 styleClass=""
                                                 value="#{metadata.value}" />
@@ -769,7 +768,7 @@
             loadThumbnails();
         } );
 
-        jsf.ajax.addOnEvent( function( data ) {
+        faces.ajax.addOnEvent( function( data ) {
             var ajaxstatus = data.status; // Can be "begin", "complete" and "success"
             switch ( ajaxstatus ) {
                 case "success": // This is called when ajax response is successfully processed.
