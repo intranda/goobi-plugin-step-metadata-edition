@@ -21,15 +21,6 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
@@ -63,8 +54,17 @@ import de.sub.goobi.persistence.managers.ProcessManager;
 import de.sub.goobi.persistence.managers.PropertyManager;
 import io.goobi.vocabulary.exchange.FieldDefinition;
 import io.goobi.vocabulary.exchange.VocabularySchema;
+import io.goobi.workflow.api.vocabulary.APIException;
 import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
 import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabulary;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.model.SelectItem;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -355,44 +355,48 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 vocabularyName = field.getString("/vocabularyName");
                 List<String> fields = Arrays.asList(field.getStringArray("/searchParameter"));
 
-                if (fields == null || fields.isEmpty()) {
-                    ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
-                    vocabularyUrl = vocabulary.getURI();
+                try {
+                    if (fields == null || fields.isEmpty()) {
+                        ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                        vocabularyUrl = vocabulary.getURI();
 
-                    vocabularyRecords = vocabularyAPI.vocabularyRecords()
-                            .getRecordSelectItems(vocabulary.getId());
-                } else {
-                    if (fields.size() > 1) {
-                        Helper.setFehlerMeldung("vocabularyList with multiple fields is not supported right now");
-                        return;
+                        vocabularyRecords = vocabularyAPI.vocabularyRecords()
+                                .getRecordSelectItems(vocabulary.getId());
+                    } else {
+                        if (fields.size() > 1) {
+                            Helper.setFehlerMeldung("vocabularyList with multiple fields is not supported right now");
+                            return;
+                        }
+
+                        String[] parts = fields.get(0).trim().split("=");
+                        if (parts.length != 2) {
+                            Helper.setFehlerMeldung("Wrong field format");
+                            return;
+                        }
+
+                        String searchFieldName = parts[0];
+                        String searchFieldValue = parts[1];
+
+                        ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
+                        vocabularyUrl = vocabulary.getURI();
+                        VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
+                        Optional<FieldDefinition> searchField = schema.getDefinitions()
+                                .stream()
+                                .filter(d -> d.getName().equals(searchFieldName))
+                                .findFirst();
+
+                        if (searchField.isEmpty()) {
+                            Helper.setFehlerMeldung("Field " + searchFieldName + " not found in vocabulary " + vocabulary.getName());
+                            return;
+                        }
+
+                        vocabularyRecords = vocabularyAPI.vocabularyRecords()
+                                .getRecordSelectItems(vocabularyAPI.vocabularyRecords()
+                                        .list(vocabulary.getId())
+                                        .search(searchField.get().getId() + ":" + searchFieldValue));
                     }
-
-                    String[] parts = fields.get(0).trim().split("=");
-                    if (parts.length != 2) {
-                        Helper.setFehlerMeldung("Wrong field format");
-                        return;
-                    }
-
-                    String searchFieldName = parts[0];
-                    String searchFieldValue = parts[1];
-
-                    ExtendedVocabulary vocabulary = vocabularyAPI.vocabularies().findByName(vocabularyName);
-                    vocabularyUrl = vocabulary.getURI();
-                    VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
-                    Optional<FieldDefinition> searchField = schema.getDefinitions()
-                            .stream()
-                            .filter(d -> d.getName().equals(searchFieldName))
-                            .findFirst();
-
-                    if (searchField.isEmpty()) {
-                        Helper.setFehlerMeldung("Field " + searchFieldName + " not found in vocabulary " + vocabulary.getName());
-                        return;
-                    }
-
-                    vocabularyRecords = vocabularyAPI.vocabularyRecords()
-                            .getRecordSelectItems(vocabularyAPI.vocabularyRecords()
-                                    .list(vocabulary.getId())
-                                    .search(searchField.get().getId() + ":" + searchFieldValue));
+                } catch (APIException e) {
+                    Helper.setFehlerMeldung(e);
                 }
             }
 
@@ -400,7 +404,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
                 vocabularyRecords = Collections.emptyList();
             }
 
-            MetadataEditionConfiguredField metadataField = new MetadataEditionConfiguredField(source, name, fieldType, label, required, helpText, searchable);
+            MetadataEditionConfiguredField metadataField =
+                    new MetadataEditionConfiguredField(source, name, fieldType, label, required, helpText, searchable);
             metadataField.setStructType(structType);
             metadataField.setDefaultValue(defaultValue);
             metadataField.setValidationRegex(validationRegex);
@@ -523,7 +528,8 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
             if (cf.getMetadataFields().isEmpty()) {
                 brokenConfiguredFields.add(cf);
-                String message = "The configured field \"" + cf.getLabel() + "\" contains no valid metadata fields, it will be removed! Please check your configuration!";
+                String message = "The configured field \"" + cf.getLabel()
+                        + "\" contains no valid metadata fields, it will be removed! Please check your configuration!";
                 log.error(message);
                 Helper.setFehlerMeldung(message);
             }
