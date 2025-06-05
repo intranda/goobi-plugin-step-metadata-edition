@@ -26,8 +26,9 @@ import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang.StringUtils;
+import org.goobi.beans.GoobiProperty;
+import org.goobi.beans.GoobiProperty.PropertyOwnerType;
 import org.goobi.beans.Process;
-import org.goobi.beans.Processproperty;
 import org.goobi.beans.Step;
 import org.goobi.production.cli.helper.StringPair;
 import org.goobi.production.enums.PluginGuiType;
@@ -320,7 +321,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
     private void initDisplayFields(SubnodeConfiguration config) {
 
-        List<Processproperty> properties = this.process.getEigenschaften();
+        List<GoobiProperty> properties = this.process.getProperties();
 
         this.metadataFieldList.clear();
 
@@ -425,30 +426,28 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
             boolean found = false;
             if ("property".contains(cf.getSource())) {
-                for (Processproperty prop : properties) {
-                    if (prop.getTitel().equals(cf.getName())) {
+                for (GoobiProperty prop : properties) {
+                    if (prop.getPropertyName().equals(cf.getName())) {
                         found = true;
                         MetadataEditionField mf = new MetadataEditionField(cf);
                         mf.setProperty(prop);
-                        if (StringUtils.isBlank(prop.getWert())) {
-                            prop.setWert(cf.getDefaultValue());
+                        if (StringUtils.isBlank(prop.getPropertyValue())) {
+                            prop.setPropertyValue(cf.getDefaultValue());
                         }
                         cf.addMetadataField(mf);
                     }
                 }
                 if (!found) {
-                    Processproperty property = new Processproperty();
+                    GoobiProperty property = new GoobiProperty(PropertyOwnerType.PROCESS);
                     property.setContainer("0");
                     property.setCreationDate(new Date());
-                    property.setProcessId(this.process.getId());
-                    property.setProzess(this.process);
-                    property.setTitel(cf.getName());
+                    property.setOwner(this.process);
+                    property.setPropertyName(cf.getName());
                     property.setType(PropertyType.STRING);
-                    property.setWert(cf.getDefaultValue());
                     this.process.getEigenschaften().add(property);
                     MetadataEditionField mf = new MetadataEditionField(cf);
                     mf.setProperty(property);
-                    property.setWert(cf.getDefaultValue());
+                    property.setPropertyValue(cf.getDefaultValue());
                     cf.addMetadataField(mf);
                 }
 
@@ -754,10 +753,10 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
 
         for (MetadataEditionField mf : this.deleteList) {
             if ("property".contains(mf.getConfiguredField().getSource())) {
-                Processproperty pp = mf.getProperty();
+                GoobiProperty pp = mf.getProperty();
                 this.process.getEigenschaften().remove(pp);
                 if (pp.getId() != null) {
-                    PropertyManager.deleteProcessProperty(pp);
+                    PropertyManager.deleteProperty(pp);
                 }
             } else if ("metadata".contains(mf.getConfiguredField().getSource())) {
                 Metadata md = mf.getMetadata();
@@ -776,7 +775,7 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
             for (MetadataEditionField mf : cf.getMetadataFields()) {
                 if (mf.getProperty() != null) {
-                    PropertyManager.saveProcessProperty(mf.getProperty());
+                    PropertyManager.saveProperty(mf.getProperty());
                 }
             }
         }
@@ -1016,14 +1015,13 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
             field.addMetadataField(metadataField);
 
             if ("property".contains(field.getSource())) {
-                Processproperty property = new Processproperty();
+                GoobiProperty property = new GoobiProperty(PropertyOwnerType.PROCESS);
                 property.setContainer("0");
                 property.setCreationDate(new Date());
-                property.setProcessId(this.process.getId());
-                property.setProzess(this.process);
-                property.setTitel(field.getName());
+                property.setOwner(this.process);
+                property.setPropertyName(field.getName());
                 property.setType(PropertyType.STRING);
-                property.setWert(this.currentField.getProperty().getWert());
+                property.setPropertyValue(this.currentField.getProperty().getPropertyValue());
                 this.process.getEigenschaften().add(property);
                 metadataField.setProperty(property);
 
@@ -1084,25 +1082,24 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         this.selectedField.addMetadataField(mf);
         switch (this.selectedField.getSource()) {
             case "property":
-                Processproperty property = new Processproperty();
+                GoobiProperty property = new GoobiProperty(PropertyOwnerType.PROCESS);
                 property.setContainer("0");
                 property.setCreationDate(new Date());
-                property.setProcessId(this.process.getId());
-                property.setProzess(this.process);
-                property.setTitel(this.selectedField.getName());
+                property.setOwner(this.process);
+                property.setPropertyName(this.selectedField.getName());
                 property.setType(PropertyType.STRING);
-                property.setWert(this.selectedField.getDefaultValue());
+                property.setPropertyValue(this.selectedField.getDefaultValue());
                 this.process.getEigenschaften().add(property);
                 mf.setProperty(property);
                 if ("vocabularyList".equals(this.selectedField.getType())) {
                     for (SelectItem item : this.selectedField.getVocabularyList()) {
                         if (this.newValue.equals(item.getValue())) {
-                            property.setWert(item.getLabel());
+                            property.setPropertyValue(item.getLabel());
                             break;
                         }
                     }
                 } else {
-                    property.setWert(this.newValue);
+                    property.setPropertyValue(this.newValue);
                 }
                 break;
             case "metadata":
