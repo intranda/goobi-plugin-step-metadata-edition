@@ -1,7 +1,7 @@
 package de.intranda.goobi.plugins;
 
 import org.apache.commons.lang.StringUtils;
-import org.goobi.beans.Processproperty;
+import org.goobi.beans.GoobiProperty;
 
 import jakarta.faces.model.SelectItem;
 import lombok.Data;
@@ -18,7 +18,7 @@ public class MetadataEditionField {
     // holds the actual object
     private Metadata metadata;
     private Person person;
-    private Processproperty property;
+    private GoobiProperty property;
 
     @NonNull
     @ToString.Exclude
@@ -34,7 +34,7 @@ public class MetadataEditionField {
                         //                        metadata.setAuthorityFile(configuredField.getVocabularyName(), configuredField.getVocabularyUrl(),
                         //                                configuredField.getVocabularyUrl() + "/" + value);
                     } else if (property != null) {
-                        property.setWert(item.getLabel());
+                        property.setPropertyValue(item.getLabel());
                     }
                     break;
                 }
@@ -42,7 +42,7 @@ public class MetadataEditionField {
         } else if (metadata != null) {
             metadata.setValue(null);
         } else if (property != null) {
-            property.setWert(null);
+            property.setPropertyValue(null);
         }
     }
 
@@ -51,7 +51,7 @@ public class MetadataEditionField {
         if (metadata != null) {
             label = metadata.getValue();
         } else if (property != null) {
-            label = property.getWert();
+            label = property.getPropertyValue();
         } else {
             label = "";
         }
@@ -70,7 +70,7 @@ public class MetadataEditionField {
         if (metadata != null) {
             metadata.setValue(value);
         } else if (property != null) {
-            property.setWert(value);
+            property.setPropertyValue(value);
         }
     }
 
@@ -78,7 +78,7 @@ public class MetadataEditionField {
         if (metadata != null) {
             return metadata.getValue();
         } else if (property != null) {
-            return property.getWert();
+            return property.getPropertyValue();
         }
         return null;
     }
