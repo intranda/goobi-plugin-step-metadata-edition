@@ -266,17 +266,19 @@
                                     </ui:fragment>
 
                                     <ui:fragment rendered="#{configuredField.type == 'textarea'}">
-                                        <h:inputTextarea
-                                            styleClass="form-control"
-                                            value="#{field.value}"
-                                            required="false"
-                                            style="resize: vertical;min-height:7em;"
-                                            >
-                                            <f:ajax
-                                                execute="@this"
-                                                render="@this"
-                                                event="blur" />
-                                        </h:inputTextarea>
+                                        <div class="grow-wrap">
+                                            <h:inputTextarea
+                                                styleClass="form-control"
+                                                value="#{field.value}"
+                                                required="false"
+                                                style="resize: vertical;min-height:7em;"
+                                                >
+                                                <f:ajax
+                                                    execute="@this"
+                                                    render="@this"
+                                                    event="blur" />
+                                            </h:inputTextarea>
+                                        </div>
                                     </ui:fragment>
 
                                     <ui:fragment rendered="#{configuredField.type == 'textReadonly'}">
@@ -285,6 +287,7 @@
                                             value="#{field.value}"
                                             required="false"
                                             readonly="true"
+                                            disabled="true"
                                             >
                                         </h:inputText>
                                     </ui:fragment>
@@ -295,6 +298,7 @@
                                             value="#{field.value}"
                                             required="false"
                                             readonly="true"
+                                            disabled="true"
                                             style="resize: vertical;min-height:7em;"
                                             >
                                         </h:inputTextarea>
