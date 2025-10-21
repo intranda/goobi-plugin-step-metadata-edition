@@ -3,6 +3,10 @@ title: Metadata edition
 identifier: intranda_step_metadata_edition
 published: true
 description: This step plugin for Goobi workflow allows you to edit metadata directly from an open task without using the METS editor.
+keywords:
+    - Goobi workflow
+    - Plugin
+    - Step Plugin
 ---
 ## Introduction
 This plugin allows the editing of configurable properties and metadata within the user interface of an open task without having to enter the METS editor. In addition to editing the metadata, it is also possible to search for other processes and to selectively transfer metadata from found processes. With the integrated thumbnail display, the representative of the object can also be set.

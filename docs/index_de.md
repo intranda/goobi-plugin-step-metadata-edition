@@ -3,6 +3,10 @@ title: Metadaten bearbeiten
 identifier: intranda_step_metadata_edition
 published: true
 description: Dieses Step Plugin für Goobi workflow erlaubt die direkte Bearbeitung von Metadaten aus einer geöffneten Aufgabe heraus ohne Verwendung des METS-Editors.
+keywords:
+    - Goobi workflow
+    - Plugin
+    - Step Plugin
 ---
 ## Einführung
 Dieses Plugin erlaubt die Bearbeitung von konfigurierbaren Eigenschaften und Metadaten innerhalb der Nutzeroberfläche eine geöffneten Aufgabe, ohne dass dafür der METS-Editor betreten werden muss. Neben der Bearbeitung der Metadaten ist auch eine Suche von anderen Vorgängen und die gezielte Übernahme von Metadaten aus gefundenen Vorgängen möglich. Mit der integrierten Thumbnailanzeige kann ausserdem der Repräsentant des Werkes gesetzt werden.
