@@ -9,7 +9,7 @@ keywords:
     - Step Plugin
 ---
 ## Einführung
-Dieses Plugin erlaubt die Bearbeitung von konfigurierbaren Eigenschaften und Metadaten innerhalb der Nutzeroberfläche eine geöffneten Aufgabe, ohne dass dafür der METS-Editor betreten werden muss. Neben der Bearbeitung der Metadaten ist auch eine Suche von anderen Vorgängen und die gezielte Übernahme von Metadaten aus gefundenen Vorgängen möglich. Mit der integrierten Thumbnailanzeige kann ausserdem der Repräsentant des Werkes gesetzt werden.
+Dieses Plugin erlaubt die Bearbeitung von konfigurierbaren Eigenschaften und Metadaten innerhalb der Nutzeroberfläche einer geöffneten Aufgabe, ohne dass dafür der METS-Editor betreten werden muss. Neben der Bearbeitung der Metadaten ist auch eine Suche von anderen Vorgängen und die gezielte Übernahme von Metadaten aus gefundenen Vorgängen möglich. Mit der integrierten Thumbnailanzeige kann ausserdem der Repräsentant des Werkes gesetzt werden.
 
 
 ## Installation
@@ -159,7 +159,7 @@ Der Block `<config>` kann für verschiedene Projekte oder Arbeitsschritte wieder
 
 
 ### Konfiguration: displayfield
-Für jedes einzublendende Metadatum kann ein Element `<displayfield>` definiert werden. Dieses steuert die Anzeige und Speicherug der jeweiligen Daten.
+Für jedes einzublendende Metadatum kann ein Element `<displayfield>` definiert werden. Dieses steuert die Anzeige und Speicherung der jeweiligen Daten.
 
 | Wert | Beschreibung |
 | :--- | :--- |
@@ -176,7 +176,7 @@ Für jedes einzublendende Metadatum kann ein Element `<displayfield>` definiert 
 | `searchable` | Mit diesem Parameter läßt sich definieren, ob der Inhalt dieses Feldes für die Ausführung einer Suche verwendet werden soll. |
 | `suffix` | Hiermit läßt sich ein Suffix bestimmen, das der Suchanfrage angefügt werden soll, wenn andere Vorgänge mit gleichem Feldinhalt gesucht werden. |
 | `vocabularyName` | Hier wird der Name des Vokabulars festgelegt, wenn dieses für die Anzeige von auswählbaren Datensätzen verwendet werden soll (z. B. Fachbegriffe). |
-| `searchParameter` | Dieser Paremeter ist optional und wiederholbar. Er dient zur weiteren Einschränkung von Datensätzen aus dem Vokabular (z. B. `type=AccessLocations`) |
+| `searchParameter` | Dieser Parameter ist optional und wiederholbar. Er dient zur weiteren Einschränkung von Datensätzen aus dem Vokabular (z. B. `type=AccessLocations`) |
 
 
 ### Konfiguration: importfield

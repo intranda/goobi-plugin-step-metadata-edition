@@ -79,7 +79,7 @@ The configuration of the plugin is structured as follows:
                 name: the internal name of the field to be shown
                 type: define how the field shall look like (text, checkbox, multivalue, list, checkbox)
                 required: define if the value must be filled out
-                helpText: an explaination text for the field content
+                helpText: an explanation text for the field content
                 validationRegex: a regular expression to validate the field content
                 validationErrorText: the message to be shown if the validation is not successful
                 label: a label to show to the users for the field
@@ -175,7 +175,7 @@ For each metadata to be displayed, an element `<displayfield>` can be defined. T
 | `searchable` | This parameter can be used to define whether the content of this field is to be used for the execution of a search. |
 | `suffix` | This allows you to specify a suffix to be added to the search query when searching for other processes with the same field content. |
 | `vocabularyName` | The name of the vocabulary is defined here if it is to be used for the display of selectable data records (e.g. technical terms). |
-| `searchParameter` | This paremeter is optional and repeatable. It is used to further restrict records from the vocabulary (e.g. `type=AccessLocations`) |
+| `searchParameter` | This parameter is optional and repeatable. It is used to further restrict records from the vocabulary (e.g. `type=AccessLocations`) |
 
 
 ### Configuration: importfield
