@@ -235,6 +235,17 @@
                                         </ui:fragment>
 
                                         <h:commandLink
+                                            rendered="#{configuredField.repeatable}"
+                                            styleClass="btn btn-blank p-1 font-light"
+                                            title="#{msgs.add}"
+                                            action="#{AktuelleSchritteForm.myPlugin.addRepeatableField}">
+                                            <i class="fa fa-plus" />
+                                            <f:setPropertyActionListener
+                                                value="#{field}"
+                                                target="#{AktuelleSchritteForm.myPlugin.currentField}" />
+                                        </h:commandLink>
+
+                                        <h:commandLink
                                             rendered="#{configuredField.repeatable or configuredField.deletable}"
                                             styleClass="btn btn-blank p-1 font-light"
                                             title="#{msgs.remove}"

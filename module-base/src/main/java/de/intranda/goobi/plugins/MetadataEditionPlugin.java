@@ -1052,6 +1052,62 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         }
     }
 
+    public void addRepeatableField() {
+        if (this.currentField == null) {
+            return;
+        }
+        MetadataEditionConfiguredField configuredField = this.currentField.getConfiguredField();
+        if (configuredField == null || !configuredField.isRepeatable()) {
+            return;
+        }
+
+        MetadataEditionField newField = new MetadataEditionField(configuredField);
+
+        switch (configuredField.getSource()) {
+            case "property":
+                GoobiProperty property = new GoobiProperty(PropertyOwnerType.PROCESS);
+                property.setContainer("0");
+                property.setCreationDate(new Date());
+                property.setOwner(this.process);
+                property.setPropertyName(configuredField.getName());
+                property.setType(PropertyType.STRING);
+                property.setPropertyValue(configuredField.getDefaultValue());
+                this.process.getEigenschaften().add(property);
+                newField.setProperty(property);
+                break;
+            case "metadata":
+                try {
+                    Metadata md = new Metadata(this.prefs.getMetadataTypeByName(configuredField.getName()));
+                    md.setValue(configuredField.getDefaultValue());
+                    if (this.anchor != null && "anchor".equals(configuredField.getStructType())) {
+                        this.anchor.addMetadata(md);
+                    } else {
+                        this.logical.addMetadata(md);
+                    }
+                    newField.setMetadata(md);
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+                break;
+            default:
+                try {
+                    Person person = new Person(this.prefs.getMetadataTypeByName(configuredField.getName()));
+                    if (this.anchor != null && "anchor".equals(configuredField.getStructType())) {
+                        this.anchor.addPerson(person);
+                    } else {
+                        this.logical.addPerson(person);
+                    }
+                    newField.setPerson(person);
+                } catch (MetadataTypeNotAllowedException e) {
+                    log.error(e);
+                }
+                break;
+        }
+
+        configuredField.addMetadataField(newField);
+        this.currentField = null;
+    }
+
     public void deleteField() {
         if (this.currentField != null) {
             for (MetadataEditionConfiguredField cf : this.metadataFieldList) {
