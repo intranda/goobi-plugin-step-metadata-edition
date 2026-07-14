@@ -8,6 +8,7 @@
     xmlns:p="http://primefaces.org/ui"
     xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
     xmlns:jsf="http://xmlns.jcp.org/jsf"
+    xmlns:util="http://goobi.io/util"
     xmlns:c="http://java.sun.com/jsp/jstl/core">
 
     <link
@@ -75,7 +76,7 @@
 
                     <intranda:boxTitle
                         title="#{msgs.intranda_step_metadata_edition_imageSelection}"
-                        icon="fa-puzzle-piece">
+                        icon="puzzle">
 
                         <div class="actions d-flex">
                             <button
@@ -84,7 +85,8 @@
                                 <f:setPropertyActionListener
                                     value="#{!AktuelleSchritteForm.myPlugin.collapsedImageSelection}"
                                     target="#{AktuelleSchritteForm.myPlugin.collapsedImageSelection}" />
-                                <i class="#{AktuelleSchritteForm.myPlugin.collapsedImageSelection ? 'fa fa-angle-down':'fa fa-angle-up'}"></i>
+                                <util:icon
+                                    icon="#{AktuelleSchritteForm.myPlugin.collapsedImageSelection ? 'chevron-down':'chevron-up'}" />
                                 <f:ajax
                                     render="@form" />
                             </button>
@@ -161,7 +163,7 @@
 
             <intranda:boxTitle
                 title="#{msgs.intranda_step_metadata_edition_properties}"
-                icon="fa-puzzle-piece">
+                icon="puzzle">
 
                 <div class="actions d-flex">
                     <button
@@ -170,7 +172,8 @@
                         <f:setPropertyActionListener
                             value="#{!AktuelleSchritteForm.myPlugin.collapsedProperties}"
                             target="#{AktuelleSchritteForm.myPlugin.collapsedProperties}" />
-                        <i class="#{AktuelleSchritteForm.myPlugin.collapsedProperties ? 'fa fa-angle-down':'fa fa-angle-up'}"></i>
+                            <util:icon
+                                icon="#{AktuelleSchritteForm.myPlugin.collapsedProperties ? 'chevron-down':'chevron-up'}" />
                         <f:ajax
                             render="@form" />
                     </button>
@@ -204,13 +207,9 @@
                                         for="field_#{parentStatus.index}_#{status.index}"
                                         class="form__label">
                                         #{msgs[configuredField.label]}
-                                        <i
-                                            class="ms-2 text-primary fa fa-asterisk"
-                                            aria-hidden="true"
-                                            title="#{msgs.requiredField}"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="right"
-                                            jsf:rendered="#{configuredField.required}"></i>
+                                        <ui:fragment rendered="#{configuredField.required}">
+                                            <util:icon icon="asterisk" styleClass="icon--xs icon--b5" />
+                                        </ui:fragment>
                                     </label>
                                     <span>
                                         <ui:fragment rendered="#{configuredField.searchable}">
@@ -218,7 +217,7 @@
                                                 styleClass="btn btn-blank p-1 font-light"
                                                 title="#{msgs.search}"
                                                 action="#{AktuelleSchritteForm.myPlugin.seachField}">
-                                                <i class="fa fa-search" />
+                                                <util:icon icon="search" />
                                                 <f:setPropertyActionListener
                                                     value="true"
                                                     target="#{AktuelleSchritteForm.myPlugin.displaySearchPopup}" />
@@ -250,7 +249,7 @@
                                             styleClass="btn btn-blank p-1 font-light"
                                             title="#{msgs.remove}"
                                             action="#{AktuelleSchritteForm.myPlugin.deleteField}">
-                                            <i class="fa fa-minus" />
+                                            <util:icon icon="minus" />
                                             <f:setPropertyActionListener
                                                 value="#{field}"
                                                 target="#{AktuelleSchritteForm.myPlugin.currentField}" />
@@ -422,7 +421,7 @@
                     title="#{msgs.downloadAllFiles}"
                     action="#{AktuelleSchritteForm.myPlugin.downloadAllFiles}"
                     rendered="#{AktuelleSchritteForm.myPlugin.displayDownloadButton}">
-                    <i class="fa fa-download" />
+                    <util:icon icon="download" />
                     <span>
                         <h:outputText value="#{msgs.downloadAllFiles}" />
                     </span>
@@ -434,7 +433,7 @@
                     title="#{msgs.duplicate}"
                     action="#{AktuelleSchritteForm.myPlugin.openMetadataPopup}"
                     rendered="#{AktuelleSchritteForm.myPlugin.displayMetadataAddButton}">
-                    <i class="fa fa-plus" />
+                    <util:icon icon="plus" />
                     <span>
                         <h:outputText value="#{msgs.neuesMetadatumAnlegen}" />
                     </span>
@@ -446,7 +445,7 @@
                     title="#{msgs.intranda_step_metadata_edition_searchForProcess}"
                     action="#{AktuelleSchritteForm.myPlugin.openPopup}"
                     rendered="#{AktuelleSchritteForm.myPlugin.displayMetadataImportButton}">
-                    <i class="fa fa-search"></i>
+                    <util:icon icon="search" />
                     <span>
                         <h:outputText value="#{msgs.intranda_step_metadata_edition_searchForProcess}" />
                     </span>
@@ -458,7 +457,7 @@
                     id="absenden"
                     type="submit"
                     action="#{AktuelleSchritteForm.myPlugin.saveAllChanges}">
-                    <i class="fa fa-save"></i>
+                    <util:icon icon="device-floppy" />
                     <span>
                         <h:outputText value="#{msgs.speichern}" />
                     </span>
@@ -599,7 +598,7 @@
                                 jsf:id="addField"
                                 type="submit"
                                 jsf:action="#{AktuelleSchritteForm.myPlugin.addMetadataField}">
-                                <i class="fa fa-plus"></i>
+                                <util:icon icon="plus" />
                                 <span>
                                     <h:outputText value="#{msgs.neuesMetadatumAnlegen}" />
                                 </span>
@@ -652,7 +651,7 @@
                             id="processSearchButton"
                             styleClass="btn btn-primary font-size-s margin-bottom-most"
                             action="#{AktuelleSchritteForm.myPlugin.searchForMetadata}">
-                            <i class="fa fa-search"></i>
+                            <util:icon icon="search" />
                             <span>
                                 <h:outputText value="#{msgs.search}" />
                             </span>
@@ -696,7 +695,7 @@
                                     styleClass="btn btn-success float-end"
                                     action="#{AktuelleSchritteForm.myPlugin.importMetadataFromExternalProcess}"
                                     title="#{msgs.intranda_step_metadata_edition_importSelectedMetadata}">
-                                    <i class="fa fa-check" />
+                                    <util:icon icon="check" />
                                     <f:setPropertyActionListener
                                         value="#{process}"
                                         target="#{AktuelleSchritteForm.myPlugin.selectedProcess}" />
