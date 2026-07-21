@@ -669,10 +669,9 @@
 
                 <hr jsf:rendered="#{AktuelleSchritteForm.myPlugin.displaySearchOption}" />
 
-                <h:outputText
-                    id="noHitsFound"
-                    styleClass="alert alert-warning d-block"
-                    value="#{msgs.NORM_noHits}"
+                <util:alert
+                    type="warning"
+                    message="#{msgs.NORM_noHits}"
                     rendered="#{AktuelleSchritteForm.myPlugin.processListIsEmpty}" />
 
                 <h:panelGroup
