@@ -857,7 +857,12 @@ public class MetadataEditionPlugin implements IStepPluginVersion2 {
         sql.append("SELECT prozesse.prozesseID, prozesse.titel FROM prozesse use index (status) left join batches on prozesse.batchId = batches.id ");
         sql.append("left join projekte on prozesse.ProjekteID = projekte.ProjekteID ");
         sql.append("left join institution on projekte.institution_id = institution.id ");
-        sql.append(" WHERE " + filter);
+        if (StringUtils.isNotBlank(filter)) {
+            if (!filter.trim().toLowerCase().startsWith("where") && !filter.trim().toLowerCase().startsWith("join")) {
+                sql.append(" WHERE ");
+            }
+            sql.append(filter);
+        }
 
         Connection connection = null;
         try {
